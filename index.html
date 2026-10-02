@@ -157,6 +157,14 @@ h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;c
 .ck-h{stroke:var(--pink);stroke-width:8;stroke-linecap:round}
 .ck-m{stroke:var(--accent);stroke-width:5;stroke-linecap:round}
 .ck-c{fill:var(--ink)}
+.faces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.face{border:2px solid var(--line);border-bottom-width:5px;border-radius:14px;background:var(--surface);padding:8px;touch-action:manipulation}
+.face .clockface{width:100%;max-width:150px}
+.face:active:not(:disabled){transform:translateY(3px);border-bottom-width:2px}
+.face:disabled{cursor:default}
+.face.right{border-color:var(--green);background:var(--green-soft)}
+.face.wrong{border-color:var(--red);background:var(--red-soft);opacity:.7}
+.faces .key.go{grid-column:1/-1}
 .minis{display:inline-flex;gap:2px;vertical-align:middle}
 .minis .stk{width:30px;height:30px}
 .medal{width:26px;height:31px;display:block;margin:0 auto}
@@ -256,6 +264,7 @@ const T={
   trainWeak:'Тренировать слабые места',noData:'Сыграй раунд, и здесь появится статистика.',reset:'Сбросить статистику',resetSure:'Нажми ещё раз, чтобы всё удалить'}
 };
 T.en.types.place='Place value';T.de.types.place='Stellenwerte';T.ru.types.place='Разряды';
+T.en.lookGreen='The correct clock is marked green.';T.de.lookGreen='Die richtige Uhr ist grün markiert.';T.ru.lookGreen='Правильные часы отмечены зелёным.';
 T.en.types.clock='Telling time';T.de.types.clock='Uhrzeit';T.ru.types.clock='Время на часах';
 Object.assign(T.en,{mix:'Mixed',medals:'Medals',noMedals:'No medals yet. A round with at least half of the tasks correct earns one.',
  medalShort:{g:'Gold',s:'Silver',b:'Bronze'},medalName:{g:'Gold medal!',s:'Silver medal!',b:'Bronze medal!'},
@@ -296,7 +305,8 @@ const row=()=>pick(S.rows.length?S.rows:[2,3,4,5,6,7,8,9,10]);
 const fmtS=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 const hm=x=>Math.floor(x/60)*100+x%60;
 const fmtT=v=>Math.floor(v/100)+':'+String(v%100).padStart(2,'0');
-const show=(t,v)=>t.time?fmtT(v):v;
+const show=(t,v)=>t.faces?fmtT(hm(v<60?v+720:v)):t.time?fmtT(v):v;
+const revealMsg=t=>t.faces?L().lookGreen:`${L().correctIs} ${show(t,t.a)}`;
 const fmtIn=d=>d.length>2?d.slice(0,-2)+':'+d.slice(-2):d;
 const medalOf=(c,n)=>{if(n<5)return null;const p=c/n;return p>=.9?'g':p>=.7?'s':p>=.5?'b':null};
 function levelOf(xp){let l=1,need=100;while(xp>=need){xp-=need;l++;need+=50}return{l,cur:xp,need}}
@@ -348,6 +358,10 @@ const WORD={
  kIn:{en:(n,o,a,b)=>`Look at the clock. What time will it be in ${b} minutes?`,
       de:(n,o,a,b)=>`Schau auf die Uhr. Wie spät ist es in ${b} Minuten?`,
       ru:(n,o,a,b)=>`Посмотри на часы. Сколько времени будет через ${b} минут?`},
+ kAgo:{en:(n,o,a,b)=>`Look at the clock. What time was it ${b} minutes ago?`,
+      de:(n,o,a,b)=>`Schau auf die Uhr. Wie spät war es vor ${b} Minuten?`,
+      ru:(n,o,a,b)=>`Посмотри на часы. Сколько времени было ${b} минут назад?`},
+ kPick:{en:(n,o,a)=>`Which clock shows ${a}?`,de:(n,o,a)=>`Welche Uhr zeigt ${a} Uhr?`,ru:(n,o,a)=>`На каких часах ${a}?`},
  kLeft:{en:()=>`How many minutes are left until the next full hour?`,de:()=>`Wie viele Minuten sind es bis zur nächsten vollen Stunde?`,ru:()=>`Сколько минут осталось до следующего целого часа?`},
  cIn:{en:(n,o,a,b)=>`It is ${a}. What time will it be in ${b} minutes?`,
       de:(n,o,a,b)=>`Es ist ${a} Uhr. Wie spät ist es in ${b} Minuten?`,
@@ -392,12 +406,17 @@ const GEN={
      return{w:{id:'pIn',n:0,o:0,a:u,b:N},p:[SL],a:Math.floor(N/u)}}
    if(v===1){const K=u===10?rnd(2,150):u===100?rnd(2,99):rnd(2,9);return{w:{id:'pNum',n:0,o:0,a:u,b:K},p:[SL],a:K*u}}
    const c=pick([[100,10],[100,1],[1000,100],[1000,10],[10,1]]),k=rnd(2,9);return{w:{id:'pConv',n:0,o:0,a:c,b:k},p:[SL],a:k*c[0]/c[1]}},
- clock(){if(Math.random()<.6){const k=rnd(0,3),h=rnd(1,11),m=k===3?rnd(1,11)*5:pick([0,0,15,30,30,45,5,10,20,25,35,40,50,55]),c=h*60+m;
-     if(k===0){const hh=rnd(1,12),cc=(hh%12)*60+m;return{clk:cc,w:{id:'kRead',n:0,o:0,a:cc,b:0},p:[SL],a:hh*100+m,alt:(hh%12+12)%24*100+m+(hh===12?-1200:0),time:1}}
-     if(k===1)return{clk:c,w:{id:'kPm',n:0,o:0,a:c,b:h},p:[SL],a:(h+12)*100+m,time:1};
-     if(k===2){const d=rnd(1,11)*5;return{clk:c,w:{id:'kIn',n:0,o:0,a:c,b:d},p:[SL],a:hm(c+d),alt:hm((c+d+720)%1440),time:1}}
-     return{clk:c,w:{id:'kLeft',n:0,o:0,a:c,b:0},p:[SL,U('min')],a:60-m}}
-   const v=rnd(0,2),t0=rnd(6,20)*60+rnd(0,11)*5,d=rnd(1,11)*5,f=x=>fmtT(hm(x));
+ clock(){const kind=rnd(1,4),h=rnd(1,11),mm=pick([0,0,15,30,30,45,5,10,20,25,35,40,50,55]),c=h*60+mm,d=rnd(1,11)*5,w12=x=>x<60?x+720:x;
+   if(kind===2){const k=rnd(0,2);
+     if(k===0)return{clk:c,w:{id:'kIn',n:0,o:0,a:c,b:d},p:[SL],a:hm(c+d),alt:hm((c+d+720)%1440),time:1};
+     if(k===1){const x=w12(c-d);return{clk:c,w:{id:'kAgo',n:0,o:0,a:c,b:d},p:[SL],a:hm(x),alt:hm((x+720)%1440),time:1}}
+     const m=rnd(1,11)*5,cc=h*60+m;return{clk:cc,w:{id:'kLeft',n:0,o:0,a:cc,b:0},p:[SL,U('min')],a:60-m}}
+   if(kind===3){if(Math.random()<.5){const hh=rnd(1,12),cc=(hh%12)*60+mm;return{clk:cc,w:{id:'kRead',n:0,o:0,a:cc,b:0},p:[SL],a:hh*100+mm,alt:hm((w12(cc)+720)%1440),time:1}}
+     return{clk:c,w:{id:'kPm',n:0,o:0,a:c,b:h},p:[SL],a:(h+12)*100+mm,time:1}}
+   if(kind===4){const hh=rnd(1,12),cc=(hh%12)*60+mm,sw=(mm/5%12)*60+(hh%12)*5,pm=Math.random()<.5,
+       o=[...new Set([sw,...shuffle([(cc+60)%720,(cc+660)%720,(cc+30)%720,(cc+5)%720,(cc+715)%720,(cc+15)%720])])].filter(x=>x!==cc).slice(0,3),f=shuffle([cc,...o]);
+     return{w:{id:'kPick',n:0,o:0,a:(pm?hh%12+12:hh)+':'+String(mm).padStart(2,'0'),b:0},p:[],a:cc,faces:f,mc:f}}
+   const v=rnd(0,2),t0=rnd(6,20)*60+rnd(0,11)*5,f=x=>fmtT(hm(x));
    if(v===0)return{w:{id:'cIn',n:0,o:0,a:f(t0),b:d},p:[SL],a:hm(t0+d),time:1};
    if(v===1)return{w:{id:'cAgo',n:0,o:0,a:f(t0),b:d},p:[SL],a:hm(t0-d),time:1};
    const e=rnd(1,18)*5;return{w:{id:'cDiff',n:0,o:0,a:f(t0),b:f(t0+e)},p:[SL,U('min')],a:e}},
@@ -414,7 +433,7 @@ function options(t){const a=t.a,c=new Set(),d=[1,-1,2,-2,10,-10];
   if(t.time){const b=Math.floor(a/100)*60+a%100;return shuffle([a,...shuffle([5,-5,10,-10,15,-15,60,-60]).slice(0,3).map(x=>hm(b+x))])}
   if(a>=100)d.push(100,-100);if(t.type==='place'){c.add(a*10);if(a%10===0)c.add(a/10)}if(t.f)d.push(t.f[0],-t.f[0],t.f[1],-t.f[1]);
   shuffle(d).forEach(x=>{if(c.size<3&&x!==0&&a+x>=0)c.add(a+x)});let i=3;while(c.size<3)c.add(a+i++);return shuffle([a,...c])}
-function gen(type){const t=GEN[type]();t.type=type;if(Math.random()<.3)t.mc=options(t);return t}
+function gen(type){const t=GEN[type]();t.type=type;if(!t.faces&&Math.random()<.3)t.mc=options(t);return t}
 const keyOf=t=>JSON.stringify([t.p,t.w]);
 function makeTasks(n,types){const out=[];let guard=0;
   while(out.length<n&&guard<600){guard++;const t=gen(pick(types));
@@ -433,7 +452,7 @@ function clockSVG(m){const pt=(a,r)=>{const x=(a-90)*Math.PI/180;return[(100+r*M
   for(let i=1;i<=12;i++){const a=pt(i*30,64);s+=`<text x="${a[0]}" y="${a[1]}" class="ck-n">${i}</text>`}
   const h=pt(m/60%12*30,42),n=pt(m%60*6,72);
   return `<svg class="clockface" viewBox="0 0 200 200" role="img" aria-label="clock"><circle cx="100" cy="100" r="94" class="ck-f"/>${s}<line x1="100" y1="100" x2="${h[0]}" y2="${h[1]}" class="ck-h"/><line x1="100" y1="100" x2="${n[0]}" y2="${n[1]}" class="ck-m"/><circle cx="100" cy="100" r="5" class="ck-c"/></svg>`}
-const taskHTML=(t,slot)=>(t.clk!=null?clockSVG(t.clk):'')+(t.w?`<p class="story">${story(t.w)}</p>`:'')+expr(t.p,slot);
+const taskHTML=(t,slot,res)=>(t.clk!=null?clockSVG(t.clk):'')+(t.w?`<p class="story">${story(t.w)}</p>`:'')+(t.faces?(res?clockSVG(t.a):''):expr(t.p,slot));
 const seg=(act,vals,cur,label)=>`<div class="seg" role="group">${vals.map(v=>`<button data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${label(v)}</button>`).join('')}</div>`;
 const star=f=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="${f?'var(--star)':'none'}" stroke="var(--star)" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 
@@ -571,7 +590,9 @@ function quiz(){const l=L(),t=cur(),n=Q.tasks.length;
   const digits=Q.locked?show(t,t.a):t.time?fmtIn(Q.input):Q.input;
   const dots=Q.sprint?'':`<div class="dots" aria-hidden="true">${Q.tasks.map((_,i)=>{const r=Q.res[i];return `<span class="dot ${r?(r.first?'ok':r.ok?'half':'bad'):i===Q.idx?'cur':''}"></span>`}).join('')}</div>`;
   const dis=Q.locked?'disabled':'';
-  const controls=t.mc?`<div class="opts">${t.mc.map(v=>{const cls=Q.locked&&v===t.a?' right':v===Q.wrong?' wrong':'';
+  const controls=t.faces?`<div class="faces">${t.faces.map(v=>`<button class="face${Q.locked&&v===t.a?' right':v===Q.wrong?' wrong':''}" data-act="opt" data-v="${v}" aria-label="clock" ${Q.locked||v===Q.wrong?'disabled':''}>${clockSVG(v)}</button>`).join('')}
+     ${Q.locked==='reveal'?`<button class="key go" data-act="ok">${l.next}</button>`:''}</div>`
+   :t.mc?`<div class="opts">${t.mc.map(v=>{const cls=Q.locked&&v===t.a?' right':v===Q.wrong?' wrong':'';
       return `<button class="key${cls}" data-act="opt" data-v="${v}" ${Q.locked||v===Q.wrong?'disabled':''}>${show(t,v)}</button>`}).join('')}
      ${Q.locked==='reveal'?`<button class="key go" data-act="ok">${l.next}</button>`:''}</div>`
    :`<div class="pad">${[1,2,3,4,5,6,7,8,9].map(d=>`<button class="key" data-act="d" data-v="${d}" ${dis}>${d}</button>`).join('')}
@@ -600,7 +621,7 @@ function result(){const l=L(),n=Q.res.length,c=Q.res.filter(r=>r.first).length;
   <section class="result"><h1>${Q.sprint?l.sprintDone:l.done}</h1><div class="stars">${[0,1,2].map(i=>star(i<Q.stars)).join('')}</div>
    <p class="score">${l.score(c,n)}</p><p class="meta">${l.time}: ${fmtS(secs)} · +${Q.gain} XP</p></section>
   ${rewards.length?`<section class="reward">${rewards.join('')}</section>`:''}
-  <section><h2>${mis.length?l.mistakes:n?l.noMistakes:''}</h2><div class="mistakes">${mis.map(r=>`<div class="mis">${taskHTML(r.t,slotHTML(show(r.t,r.t.a),'fix'))}
+  <section><h2>${mis.length?l.mistakes:n?l.noMistakes:''}</h2><div class="mistakes">${mis.map(r=>`<div class="mis">${taskHTML(r.t,slotHTML(show(r.t,r.t.a),'fix'),1)}
     <small>${r.given!=null?`${l.yours}: <s>${show(r.t,r.given)}</s>`:r.timeout?l.noAnswer:''}</small></div>`).join('')}</div></section>
   <div class="actions">${mis.length?`<button class="btn red" data-act="practice">${l.practice} (${mis.length})</button>`:''}
    <button class="btn primary" data-act="replay">${Q.sprint?l.sprint:l.replay}</button><button class="btn" data-act="go" data-v="home">${l.menu}</button></div>`}
@@ -655,9 +676,9 @@ function answer(v){const l=L(),t=cur(),ms=Date.now()-Q.taskT0;if(Q.locked)return
   if(v===t.a||(t.alt!=null&&v===t.alt)){const first=Q.tries===0;rec(t,first,ms);Q.res.push({t,ok:true,first,given:first?null:Q.last});Q.streak=first?Q.streak+1:0;
     Q.locked='ok';Q.msg=pick(l.right);Q.msgType='ok';render();timer=setTimeout(next,800)}
   else if(Q.tries===0){Q.tries=1;Q.last=v;Q.wrong=v;Q.input='';Q.msg=l.again;Q.msgType='warn';Q.shake=true;Q.streak=0;render()}
-  else{rec(t,false,ms);Q.res.push({t,ok:false,first:false,given:v});Q.locked='reveal';Q.msg=`${l.correctIs} ${show(t,t.a)}`;Q.msgType='bad';render()}}
+  else{rec(t,false,ms);Q.res.push({t,ok:false,first:false,given:v});Q.locked='reveal';Q.msg=`${revealMsg(t)}`;Q.msgType='bad';render()}}
 function timeout(){const l=L(),t=cur();rec(t,false,S.limit*1000);Q.res.push({t,ok:false,first:false,given:null,timeout:true});Q.streak=0;
-  Q.locked='reveal';Q.msg=`${l.timeUp} ${l.correctIs} ${show(t,t.a)}`;Q.msgType='bad';render()}
+  Q.locked='reveal';Q.msg=`${l.timeUp} ${revealMsg(t)}`;Q.msgType='bad';render()}
 function next(){clearTimeout(timer);Q.idx++;Q.input='';Q.tries=0;Q.locked=null;Q.msg='';Q.msgType='';Q.wrong=null;Q.last=null;Q.taskT0=Date.now();
   if(Q.sprint&&Q.idx>=Q.tasks.length)Q.tasks.push(gen(pick(S.types)));
   if(Q.idx>=Q.tasks.length){finish();return}
