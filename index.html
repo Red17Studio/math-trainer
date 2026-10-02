@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Mathe-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column on squared notebook paper; the task sits on a card with a margin line, the clock is the biggest thing in the header, rewards live in a sticker album. */
+:root{
+  --paper:#faf7fd; --grid:#e6dcf2; --ink:#2b2140; --muted:#6b6082;
+  --accent:#6b3fc4; --accent-soft:#ece4fb; --on-accent:#ffffff; --pink:#cf3f7c; --pink-soft:#fbe2ee;
+  --red:#c4401f; --red-soft:#fbe6df; --green:#1f7d45; --green-soft:#dcf1e3; --star:#d99a00;
+  --surface:#ffffff; --line:#d3c7e4;
+  --f-ui:'Balsamiq Sans','Comic Sans MS',system-ui,sans-serif;
+  --f-num:'Fredoka','Balsamiq Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1d1728; --grid:#2a2238; --ink:#efe9f7; --muted:#ada2c2;
+  --accent:#b79cff; --accent-soft:#37295c; --on-accent:#1d1728; --pink:#ff8dbb; --pink-soft:#4a2338;
+  --red:#ff9478; --red-soft:#4a2a22; --green:#72d897; --green-soft:#1e3d2b; --star:#f2c14e;
+  --surface:#272036; --line:#3f3454; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1d1728; --grid:#2a2238; --ink:#efe9f7; --muted:#ada2c2;
+  --accent:#b79cff; --accent-soft:#37295c; --on-accent:#1d1728; --pink:#ff8dbb; --pink-soft:#4a2338;
+  --red:#ff9478; --red-soft:#4a2a22; --green:#72d897; --green-soft:#1e3d2b; --star:#f2c14e;
+  --surface:#272036; --line:#3f3454; color-scheme:dark}
+
+html,body{min-height:100%}
+body{background-color:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:18px 36px;display:flex;flex-direction:column;gap:18px}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:28px;line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:19px;margin:0 0 10px}
+h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sub{margin:4px 0 0;color:var(--muted)}
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:14px}
+.ghost{border:0;background:none;color:var(--muted);padding:8px 4px;min-height:44px;font-weight:700}
+.iconbtn{border:2px solid var(--line);background:var(--surface);border-radius:12px;min-height:44px;padding:6px 14px;font-weight:700}
+
+/* Home */
+.level{display:grid;gap:8px}
+.level-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.level-n{font-family:var(--f-num);font-size:24px;font-weight:600;color:var(--accent)}
+.xp{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.bar{height:12px;border-radius:6px;background:var(--accent-soft);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.big{display:grid;gap:2px;text-align:left;border-radius:16px;border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);padding:14px 16px}
+.big b{font-size:21px}
+.big span{color:var(--muted);font-size:14px}
+.big.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.big.primary span{color:var(--on-accent);opacity:.85}
+.big:active,.btn:active{transform:translateY(2px)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+/* Settings */
+.settings{display:grid;gap:18px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:8px 14px;min-height:42px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-width:44px;min-height:44px;padding:0 12px;border-radius:10px;border:2px solid var(--line);background:none;font-weight:700;color:var(--muted)}
+.chip.num{font-family:var(--f-num);font-size:18px;padding:0}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.hint{margin:6px 0 0;font-size:13px;color:var(--muted)}
+
+/* Quiz */
+.qtop{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.qtop .ghost{justify-self:start}
+.clock{font-family:var(--f-num);font-weight:600;font-size:30px;line-height:1;padding:8px 18px;border-radius:999px;border:3px solid var(--accent);background:var(--surface);color:var(--accent);font-variant-numeric:tabular-nums;min-width:4.2em;text-align:center}
+.clock.low{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.streak{justify-self:end;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.tlimit{display:flex;align-items:center;gap:10px}
+.tlimit .bar{flex:1;background:var(--pink-soft)}
+.tlimit .bar i{background:var(--pink);transition:width .2s linear}
+.tlimit span{font-family:var(--f-num);font-weight:600;color:var(--pink);min-width:2.4em;text-align:right;font-variant-numeric:tabular-nums}
+.prog{font-weight:700;font-variant-numeric:tabular-nums}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dot{width:16px;height:16px;border:2px solid var(--line);border-radius:4px;background:var(--surface)}
+.dot.ok{background:var(--green);border-color:var(--green)}
+.dot.half{background:var(--green-soft);border-color:var(--green)}
+.dot.bad{background:var(--red);border-color:var(--red)}
+.dot.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+.card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:26px 16px 16px 40px;min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.card::before{content:"";position:absolute;left:24px;top:0;bottom:0;width:2px;background:var(--pink);opacity:.55}
+.card.shake{animation:shake .38s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.story{margin:0;font-size:19px;line-height:1.5}
+.expr{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.25em .32em;font-family:var(--f-num);font-weight:500;font-size:clamp(34px,10vw,52px);line-height:1.15}
+.num{font-variant-numeric:tabular-nums}
+.op{color:var(--muted)}
+.unit{font-family:var(--f-ui);font-size:.5em;color:var(--muted);margin-left:-.1em}
+.slot{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-width:1.3em;min-height:1.2em;padding:0 .12em;border:2.5px dashed var(--accent);border-radius:10px;color:var(--accent);font-weight:600}
+.slot i{font-style:normal;display:inline-block;width:.62em;text-align:center}
+.slot i.caret{width:.5em;height:.9em;position:relative}
+.slot i.caret::after{content:"";position:absolute;left:50%;top:.08em;bottom:.08em;width:3px;margin-left:-1.5px;background:var(--accent);border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.slot.ok{border-style:solid;border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.slot.fix{border-style:solid;border-color:var(--red);background:var(--red-soft);color:var(--red)}
+.msg{min-height:1.5em;margin:0;text-align:center;font-weight:700;color:var(--muted)}
+.msg.ok{color:var(--green)} .msg.bad{color:var(--red)} .msg.warn{color:var(--accent)}
+
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.key{height:60px;border-radius:14px;border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);font-family:var(--f-num);font-weight:600;font-size:28px;touch-action:manipulation}
+.key:active:not(:disabled){transform:translateY(3px);border-bottom-width:2px}
+.key.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-family:var(--f-ui);font-size:19px;font-weight:700}
+.key.del{font-size:24px;color:var(--muted)}
+.key:disabled{opacity:.35;cursor:default}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opts .key{height:76px;font-size:32px}
+.opts .key.right{background:var(--green-soft);border-color:var(--green);color:var(--green);opacity:1}
+.opts .key.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red);opacity:.7}
+.opts .key.go{grid-column:1/-1;height:60px;font-size:19px}
+
+/* Result */
+.result{text-align:center;display:grid;gap:10px;justify-items:center}
+.stars{display:flex;gap:8px}
+.stars svg{width:52px;height:52px}
+.score{font-size:19px;font-weight:700;margin:0;text-wrap:balance}
+.meta{margin:0;color:var(--muted);font-variant-numeric:tabular-nums}
+.reward{display:grid;gap:6px;justify-items:center;background:var(--pink-soft);border:2px solid var(--pink);border-radius:16px;padding:14px;text-align:center}
+.reward b{color:var(--pink)}
+.newst{width:132px;height:132px;animation:pop .6s cubic-bezier(.3,1.6,.5,1)}
+.medalbig .medal{width:72px;height:86px}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg)}100%{transform:none}}
+.mistakes{display:grid;gap:8px}
+.mis{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;gap:6px}
+.mis .story{font-size:15px;color:var(--muted)}
+.mis .expr{font-size:26px;justify-content:flex-start}
+.mis small{color:var(--muted);font-size:14px}
+.mis small s{color:var(--red)}
+.actions{display:grid;gap:10px}
+.btn{min-height:52px;border-radius:14px;border:2px solid var(--line);border-bottom-width:4px;background:var(--surface);font-weight:700;font-size:18px;padding:6px 14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn.small{min-height:44px;font-size:15px}
+
+/* Stickers */
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.st{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:14px;background:var(--surface);border:2px solid var(--line);padding:2px}
+.stk{width:100%;height:100%;display:block}
+.minis{display:inline-flex;gap:2px;vertical-align:middle}
+.minis .stk{width:30px;height:30px}
+.medal{width:26px;height:31px;display:block;margin:0 auto}
+.chart{display:flex;align-items:flex-end;gap:5px;height:164px}
+.col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.col i{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:6px 6px 0 0}
+.col:last-child i{background:var(--pink)}
+.col small{color:var(--muted);font-size:10.5px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,3.6em);gap:6px;align-items:center;padding:7px 0;border-top:1px solid var(--line);text-align:center;font-variant-numeric:tabular-nums}
+.mrow b{text-align:left}
+.mrow.mhead{border-top:0;padding-top:0}
+.mrow small{display:block;font-size:11px;color:var(--muted)}
+.st.locked{border:2px dashed var(--line);color:var(--line);font-family:var(--f-num);font-size:24px;background:none}
+
+/* Stats */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+.tile b{display:block;font-family:var(--f-num);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--muted)}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.trow:first-of-type{border-top:0}
+.trow .bar{grid-column:1/-1;height:8px}
+.trow small{color:var(--muted);font-variant-numeric:tabular-nums}
+.bar.good i{background:var(--green)} .bar.bad i{background:var(--red)}
+.rowgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.rc{border:2px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-variant-numeric:tabular-nums}
+.rc b{display:block;font-family:var(--f-num);font-size:18px}
+.rc small{font-size:12px;color:var(--muted)}
+.rc.good{border-color:var(--green);background:var(--green-soft)}
+.rc.bad{border-color:var(--red);background:var(--red-soft)}
+.weak{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tag{border:2px solid var(--red);background:var(--red-soft);color:var(--red);border-radius:10px;padding:4px 10px;font-weight:700;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);margin:0}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <filter id="stSh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#2b2140" flood-opacity=".38"/></filter>
+ <clipPath id="stHead"><circle cx="50" cy="56" r="30"/></clipPath>
+</defs></svg>
+<div class="app" id="app"></div>
+
+<script>
+const TYPES=['add','sub','mul','div','gap','size','place','clock','word'];
+const ST_N=30;
+const T={
+ en:{title:'Math Trainer',grade:'Grade 3 · numbers up to 1000',level:'Level',start:'Start round',tasks:'tasks',allTypes:'all task types',sprint:'Time challenge',best:'best',
+  stickers:'Stickers',stats:'Statistics',settings:'Settings',back:'← Back',
+  types:{add:'Addition',sub:'Subtraction',mul:'Times tables',div:'Division',gap:'Find the number',size:'Units',word:'Word problems'},
+  sLang:'Language',sCount:'Tasks per round',sRows:'Times-table rows',sRowsHint:'Used for times tables, division, find the number and word problems.',
+  sTypes:'Task types',sTypesHint:'Pick one or several. Selected types are mixed.',sAll:'Select all',
+  sLimit:'Maximum time per task',sLimitHint:'When the time runs out, the task counts as a mistake.',off:'Off',sSprint:'Length of the time challenge',sec:'s',min:'min',
+  task:'Task',of:'of',solved:'Solved',streak:'In a row',quit:'← Quit',check:'Check',next:'Next',
+  right:['Correct!','Great!','Well done!','Exactly!','Super!','Nice!'],again:'Almost! Try once more.',correctIs:'The answer is',timeUp:'Time is up!',
+  done:'Done!',sprintDone:'Time is up!',score:(c,n)=>`${c} of ${n} correct on the first try`,time:'Time',record:'New record!',
+  levelUp:'Level up! You are now level',newSticker:'New sticker!',albumFull:'Your album is complete!',
+  mistakes:'Let’s practise these',noMistakes:'No mistakes. Well done!',yours:'Your answer',noAnswer:'no answer in time',
+  practice:'Repeat mistakes',replay:'New round',menu:'Menu',practiceTag:'Repeat mistakes',
+  collected:'collected',albumHint:'Finish a round with two or three stars, or reach a new level, to get a sticker.',
+  rounds:'Rounds played',solvedAll:'Tasks solved',accuracy:'Correct on first try',bestSprint:'Best time challenge',
+  byType:'By task type',avg:'avg',weak:'Weak spots',weakNone:'No weak spots yet. Keep going!',hardFacts:'Tricky multiplications',rowsAcc:'Times-table rows',
+  trainWeak:'Train weak spots',noData:'Play a round and the statistics will appear here.',reset:'Reset statistics',resetSure:'Tap again to delete everything'},
+ de:{title:'Mathe-Trainer',grade:'3. Klasse · Zahlenraum bis 1000',level:'Level',start:'Runde starten',tasks:'Aufgaben',allTypes:'alle Aufgabentypen',sprint:'Auf Zeit',best:'Rekord',
+  stickers:'Sticker',stats:'Statistik',settings:'Einstellungen',back:'← Zurück',
+  types:{add:'Plus',sub:'Minus',mul:'Einmaleins',div:'Geteilt',gap:'Lückenaufgaben',size:'Größen',word:'Sachaufgaben'},
+  sLang:'Sprache',sCount:'Aufgaben pro Runde',sRows:'Einmaleins-Reihen',sRowsHint:'Gilt für Einmaleins, Geteilt, Lückenaufgaben und Sachaufgaben.',
+  sTypes:'Aufgabentypen',sTypesHint:'Wähle einen oder mehrere. Die gewählten Typen werden gemischt.',sAll:'Alle auswählen',
+  sLimit:'Maximale Zeit pro Aufgabe',sLimitHint:'Läuft die Zeit ab, zählt die Aufgabe als Fehler.',off:'Aus',sSprint:'Dauer des Zeitmodus',sec:'s',min:'min',
+  task:'Aufgabe',of:'von',solved:'Gelöst',streak:'Serie',quit:'← Beenden',check:'Prüfen',next:'Weiter',
+  right:['Richtig!','Super!','Klasse!','Genau!','Prima!','Stark!'],again:'Fast! Versuch es noch einmal.',correctIs:'Richtig ist',timeUp:'Die Zeit ist um!',
+  done:'Geschafft!',sprintDone:'Die Zeit ist um!',score:(c,n)=>`${c} von ${n} beim ersten Versuch richtig`,time:'Zeit',record:'Neuer Rekord!',
+  levelUp:'Level geschafft! Du bist jetzt Level',newSticker:'Neuer Sticker!',albumFull:'Dein Album ist voll!',
+  mistakes:'Das üben wir noch',noMistakes:'Keine Fehler. Toll gemacht!',yours:'Deine Antwort',noAnswer:'keine Antwort in der Zeit',
+  practice:'Fehler üben',replay:'Neue Runde',menu:'Zum Menü',practiceTag:'Fehler üben',
+  collected:'gesammelt',albumHint:'Schaffe eine Runde mit zwei oder drei Sternen oder ein neues Level, dann gibt es einen Sticker.',
+  rounds:'Gespielte Runden',solvedAll:'Gelöste Aufgaben',accuracy:'Beim ersten Versuch richtig',bestSprint:'Bester Zeitmodus',
+  byType:'Nach Aufgabentyp',avg:'Ø',weak:'Schwachstellen',weakNone:'Noch keine Schwachstellen. Weiter so!',hardFacts:'Knifflige Malaufgaben',rowsAcc:'Einmaleins-Reihen',
+  trainWeak:'Schwachstellen üben',noData:'Spiele eine Runde, dann erscheint hier die Statistik.',reset:'Statistik zurücksetzen',resetSure:'Noch einmal tippen, um alles zu löschen'},
+ ru:{title:'Тренажёр по математике',grade:'3 класс · числа до 1000',level:'Уровень',start:'Начать раунд',tasks:'заданий',allTypes:'все типы заданий',sprint:'На время',best:'рекорд',
+  stickers:'Наклейки',stats:'Статистика',settings:'Настройки',back:'← Назад',
+  types:{add:'Сложение',sub:'Вычитание',mul:'Умножение',div:'Деление',gap:'Найди число',size:'Величины',word:'Задачи'},
+  sLang:'Язык',sCount:'Заданий за раунд',sRows:'Таблица умножения на',sRowsHint:'Для умножения, деления, «Найди число» и текстовых задач.',
+  sTypes:'Типы заданий',sTypesHint:'Выбери один или несколько. Выбранные типы идут вперемешку.',sAll:'Выбрать все',
+  sLimit:'Максимальное время на задание',sLimitHint:'Если время вышло, задание считается ошибкой.',off:'Выкл',sSprint:'Длительность режима на время',sec:'с',min:'мин',
+  task:'Задание',of:'из',solved:'Решено',streak:'Подряд',quit:'← Выйти',check:'Проверить',next:'Дальше',
+  right:['Правильно!','Супер!','Молодец!','Точно!','Отлично!','Здорово!'],again:'Почти! Попробуй ещё раз.',correctIs:'Правильный ответ:',timeUp:'Время вышло!',
+  done:'Готово!',sprintDone:'Время вышло!',score:(c,n)=>`${c} из ${n} верно с первой попытки`,time:'Время',record:'Новый рекорд!',
+  levelUp:'Новый уровень! Теперь у тебя уровень',newSticker:'Новая наклейка!',albumFull:'Альбом собран полностью!',
+  mistakes:'Это ещё потренируем',noMistakes:'Ни одной ошибки. Здорово!',yours:'Твой ответ',noAnswer:'не успела ответить',
+  practice:'Повторить ошибки',replay:'Новый раунд',menu:'В меню',practiceTag:'Работа над ошибками',
+  collected:'собрано',albumHint:'Заверши раунд на две или три звезды или получи новый уровень, и появится наклейка.',
+  rounds:'Сыграно раундов',solvedAll:'Решено заданий',accuracy:'Верно с первой попытки',bestSprint:'Рекорд на время',
+  byType:'По типам заданий',avg:'в среднем',weak:'Слабые места',weakNone:'Слабых мест пока нет. Так держать!',hardFacts:'Трудные примеры на умножение',rowsAcc:'Таблица умножения по рядам',
+  trainWeak:'Тренировать слабые места',noData:'Сыграй раунд, и здесь появится статистика.',reset:'Сбросить статистику',resetSure:'Нажми ещё раз, чтобы всё удалить'}
+};
+T.en.types.place='Place value';T.de.types.place='Stellenwerte';T.ru.types.place='Разряды';
+T.en.types.clock='Telling time';T.de.types.clock='Uhrzeit';T.ru.types.clock='Время на часах';
+Object.assign(T.en,{mix:'Mixed',medals:'Medals',noMedals:'No medals yet. A round with at least half of the tasks correct earns one.',
+ medalShort:{g:'Gold',s:'Silver',b:'Bronze'},medalName:{g:'Gold medal!',s:'Silver medal!',b:'Bronze medal!'},
+ roundTime:'Time per round',roundTimeHint:'Last 10 rounds. Below each bar: correct answers out of all tasks.',
+ sReset:'Reset',resetGame:'Reset level and stickers',
+ albumHint:'Solve every task in a round correctly (three stars) or reach a new level to get a sticker.'});
+Object.assign(T.de,{mix:'Gemischt',medals:'Medaillen',noMedals:'Noch keine Medaillen. Dafür muss mindestens die Hälfte der Aufgaben einer Runde richtig sein.',
+ medalShort:{g:'Gold',s:'Silber',b:'Bronze'},medalName:{g:'Goldmedaille!',s:'Silbermedaille!',b:'Bronzemedaille!'},
+ roundTime:'Zeit pro Runde',roundTimeHint:'Die letzten 10 Runden. Unter jedem Balken: richtige Antworten von allen Aufgaben.',
+ sReset:'Zurücksetzen',resetGame:'Level und Sticker zurücksetzen',
+ albumHint:'Löse alle Aufgaben einer Runde richtig (drei Sterne) oder erreiche ein neues Level, dann gibt es einen Sticker.'});
+Object.assign(T.ru,{mix:'Вперемешку',medals:'Медали',noMedals:'Медалей пока нет. Нужно верно решить хотя бы половину заданий раунда.',
+ medalShort:{g:'Золото',s:'Серебро',b:'Бронза'},medalName:{g:'Золотая медаль!',s:'Серебряная медаль!',b:'Бронзовая медаль!'},
+ roundTime:'Время на раунд',roundTimeHint:'Последние 10 раундов. Под столбцом: верных ответов из всех заданий.',
+ sReset:'Сброс',resetGame:'Сбросить уровень и наклейки',
+ albumHint:'Реши верно все задания раунда (три звезды) или получи новый уровень, и появится наклейка.'});
+const UNITS={en:{m:'m',cm:'cm',km:'km',h:'h',min:'min',kg:'kg',g:'g',eur:'€',ct:'ct'},
+             de:{m:'m',cm:'cm',km:'km',h:'h',min:'min',kg:'kg',g:'g',eur:'€',ct:'ct'},
+             ru:{m:'м',cm:'см',km:'км',h:'ч',min:'мин',kg:'кг',g:'г',eur:'€',ct:'цент'}};
+const opSym=o=>({'+':'+','-':'−','*':S.lang==='en'?'×':'·','/':S.lang==='en'?'÷':':','=':'='})[o];
+
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const newStats=()=>({types:{},rows:{},facts:{},rounds:0,bestSprint:0,history:[],medals:{}});
+const S=Object.assign({lang:'en',count:10,rows:[2,3,4,5,6,7,8,9,10],types:TYPES.slice(),limit:0,sprint:120,xp:0,stickers:[],stats:newStats()},store.get('mathe3v2',{}));
+S.stats=Object.assign(newStats(),S.stats);
+if(!S.v3){S.v3=1;S.stickers=[];if(S.types.length>=7)S.types=TYPES.slice()}
+if(!S.v4){S.v4=1;if(S.types.length>=8)S.types=TYPES.slice()}
+S.stickers=S.stickers.filter(x=>typeof x==='number'&&x<ST_N);
+const save=()=>store.set('mathe3v2',S);
+const L=()=>T[S.lang];
+
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const N=v=>({t:'n',v}),O=v=>({t:'o',v}),U=v=>({t:'u',v}),SL={t:'s'};
+const row=()=>pick(S.rows.length?S.rows:[2,3,4,5,6,7,8,9,10]);
+const fmtS=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const hm=x=>Math.floor(x/60)*100+x%60;
+const fmtT=v=>Math.floor(v/100)+':'+String(v%100).padStart(2,'0');
+const show=(t,v)=>t.time?fmtT(v):v;
+const fmtIn=d=>d.length>2?d.slice(0,-2)+':'+d.slice(-2):d;
+const medalOf=(c,n)=>{if(n<5)return null;const p=c/n;return p>=.9?'g':p>=.7?'s':p>=.5?'b':null};
+function levelOf(xp){let l=1,need=100;while(xp>=need){xp-=need;l++;need+=50}return{l,cur:xp,need}}
+
+/* Word problems */
+const NAMES=[{en:'Mia',de:'Mia',ru:['Мия','Мии']},{en:'Emma',de:'Emma',ru:['Эмма','Эммы']},{en:'Lena',de:'Lena',ru:['Лена','Лены']},{en:'Sofia',de:'Sofia',ru:['София','Софии']}];
+const NOUNS=[
+ {en:['sticker','stickers'],de:['Sticker','Sticker'],ru:['наклейка','наклейки','наклеек']},
+ {en:['bead','beads'],de:['Perle','Perlen'],ru:['бусина','бусины','бусин']},
+ {en:['pencil','pencils'],de:['Stift','Stifte'],ru:['карандаш','карандаша','карандашей']},
+ {en:['shell','shells'],de:['Muschel','Muscheln'],ru:['ракушка','ракушки','ракушек']},
+ {en:['marble','marbles'],de:['Murmel','Murmeln'],ru:['шарик','шарика','шариков']},
+ {en:['card','cards'],de:['Karte','Karten'],ru:['открытка','открытки','открыток']}];
+function pl(l,n,f){if(l==='ru'){const a=n%10,b=n%100;return a===1&&b!==11?f[0]:a>=2&&a<=4&&(b<12||b>14)?f[1]:f[2]}return n===1?f[0]:f[1]}
+const PV={en:{1:'ones',10:'tens',100:'hundreds',1000:'thousands'},de:{1:'Einer',10:'Zehner',100:'Hunderter',1000:'Tausender'},
+ ru:{1:['единица','единицы','единиц','единицах'],10:['десяток','десятка','десятков','десятках'],100:['сотня','сотни','сотен','сотнях'],1000:['тысяча','тысячи','тысяч','тысячах']}};
+const WORD={
+ pIn:{en:(n,o,a,b)=>`How many ${PV.en[a]} are there in ${b} altogether?`,
+      de:(n,o,a,b)=>`Wie viele ${PV.de[a]} hat die Zahl ${b} insgesamt?`,
+      ru:(n,o,a,b)=>`Сколько всего ${PV.ru[a][2]} в числе ${b}?`},
+ pNum:{en:(n,o,a,b)=>`Which number is ${b} ${PV.en[a]}?`,
+      de:(n,o,a,b)=>`Welche Zahl ergeben ${b} ${PV.de[a]}?`,
+      ru:(n,o,a,b)=>`${b} ${pl('ru',b,PV.ru[a])} — это какое число?`},
+ pConv:{en:(n,o,a,b)=>`How many ${PV.en[a[1]]} are in ${b} ${PV.en[a[0]]}?`,
+      de:(n,o,a,b)=>`Wie viele ${PV.de[a[1]]} sind ${b} ${PV.de[a[0]]}?`,
+      ru:(n,o,a,b)=>`Сколько ${PV.ru[a[1]][2]} в ${b} ${PV.ru[a[0]][3]}?`},
+ add:{en:(n,o,a,b)=>`${n.en} has ${a} ${pl('en',a,o.en)}. She gets ${b} more. How many ${o.en[1]} does she have now?`,
+      de:(n,o,a,b)=>`${n.de} hat ${a} ${pl('de',a,o.de)}. Sie bekommt noch ${b} dazu. Wie viele ${o.de[1]} hat sie jetzt?`,
+      ru:(n,o,a,b)=>`У ${n.ru[1]} ${a} ${pl('ru',a,o.ru)}. Ей подарили ещё ${b}. Сколько ${o.ru[2]} у неё теперь?`},
+ sub:{en:(n,o,a,b)=>`${n.en} has ${a} ${pl('en',a,o.en)}. She gives away ${b}. How many ${o.en[1]} are left?`,
+      de:(n,o,a,b)=>`${n.de} hat ${a} ${pl('de',a,o.de)}. Sie verschenkt ${b} davon. Wie viele ${o.de[1]} bleiben übrig?`,
+      ru:(n,o,a,b)=>`У ${n.ru[1]} ${a} ${pl('ru',a,o.ru)}. Она отдала ${b}. Сколько ${o.ru[2]} у неё осталось?`},
+ mul:{en:(n,o,a,b)=>`There are ${a} boxes. Each box holds ${b} ${o.en[1]}. How many ${o.en[1]} are there in total?`,
+      de:(n,o,a,b)=>`Es gibt ${a} Schachteln. In jeder Schachtel sind ${b} ${o.de[1]}. Wie viele ${o.de[1]} sind es zusammen?`,
+      ru:(n,o,a,b)=>`Есть ${a} ${pl('ru',a,['коробка','коробки','коробок'])}. В каждой коробке ${b} ${pl('ru',b,o.ru)}. Сколько всего ${o.ru[2]}?`},
+ div:{en:(n,o,a,b)=>`${n.en} has ${a} ${pl('en',a,o.en)}. She shares them equally among ${b} friends. How many does each friend get?`,
+      de:(n,o,a,b)=>`${n.de} hat ${a} ${pl('de',a,o.de)}. Sie verteilt sie gleichmäßig an ${b} Freunde. Wie viele bekommt jeder?`,
+      ru:(n,o,a,b)=>`У ${n.ru[1]} ${a} ${pl('ru',a,o.ru)}. Она делит их поровну между ${b} друзьями. Сколько получит каждый?`},
+ money:{en:(n,o,a,b)=>`A book costs ${a} €. A game costs ${b} €. How much do both cost together?`,
+      de:(n,o,a,b)=>`Ein Buch kostet ${a} €. Ein Spiel kostet ${b} €. Wie viel kostet beides zusammen?`,
+      ru:(n,o,a,b)=>`Книга стоит ${a} €. Игра стоит ${b} €. Сколько стоят книга и игра вместе?`},
+ ribbon:{en:(n,o,a,b)=>`A ribbon is ${a} cm long. ${n.en} cuts off ${b} cm. How many cm are left?`,
+      de:(n,o,a,b)=>`Ein Band ist ${a} cm lang. ${n.de} schneidet ${b} cm ab. Wie viele cm bleiben übrig?`,
+      ru:(n,o,a,b)=>`Лента длиной ${a} см. ${n.ru[0]} отрезала ${b} см. Сколько сантиметров осталось?`},
+ cIn:{en:(n,o,a,b)=>`It is ${a}. What time will it be in ${b} minutes?`,
+      de:(n,o,a,b)=>`Es ist ${a} Uhr. Wie spät ist es in ${b} Minuten?`,
+      ru:(n,o,a,b)=>`Сейчас ${a}. Сколько времени будет через ${b} минут?`},
+ cAgo:{en:(n,o,a,b)=>`It is ${a}. What time was it ${b} minutes ago?`,
+      de:(n,o,a,b)=>`Es ist ${a} Uhr. Wie spät war es vor ${b} Minuten?`,
+      ru:(n,o,a,b)=>`Сейчас ${a}. Сколько времени было ${b} минут назад?`},
+ cDiff:{en:(n,o,a,b)=>`How many minutes pass from ${a} to ${b}?`,
+      de:(n,o,a,b)=>`Wie viele Minuten vergehen von ${a} Uhr bis ${b} Uhr?`,
+      ru:(n,o,a,b)=>`Сколько минут пройдёт с ${a} до ${b}?`}
+};
+const story=w=>WORD[w.id][S.lang](NAMES[w.n],NOUNS[w.o],w.a,w.b);
+
+const GEN={
+ add(){let a,b;if(Math.random()<.4){a=rnd(10,89)*10;b=rnd(1,100-a/10)*10}else{a=rnd(100,899);b=rnd(11,1000-a)}
+   return{p:[N(a),O('+'),N(b),O('='),SL],a:a+b}},
+ sub(){let a,b;if(Math.random()<.4){a=rnd(20,100)*10;b=rnd(1,a/10-1)*10}else{a=rnd(200,1000);b=rnd(11,a-20)}
+   return{p:[N(a),O('-'),N(b),O('='),SL],a:a-b}},
+ mul(){const r=row(),k=rnd(1,10),[x,y]=Math.random()<.5?[r,k]:[k,r];return{p:[N(x),O('*'),N(y),O('='),SL],a:r*k,f:[r,k]}},
+ div(){const r=row(),k=rnd(1,10);return{p:[N(r*k),O('/'),N(r),O('='),SL],a:k,f:[r,k]}},
+ gap(){const v=rnd(0,4);
+   if(v===0){const a=rnd(1,99);return{p:[N(a),O('+'),SL,O('='),N(100)],a:100-a}}
+   if(v===1){const a=rnd(1,99)*10;return{p:[N(a),O('+'),SL,O('='),N(1000)],a:1000-a}}
+   if(v===2){const c=rnd(10,500),b=rnd(10,400);return{p:[SL,O('-'),N(b),O('='),N(c)],a:b+c}}
+   const r=row(),k=rnd(1,10);
+   if(v===3)return{p:[SL,O('*'),N(r),O('='),N(r*k)],a:k,f:[r,k]};
+   return{p:[N(r*k),O('/'),SL,O('='),N(k)],a:r,f:[r,k]}},
+ size(){const v=rnd(0,7);let x,y;
+   switch(v){
+    case 0:x=rnd(1,9);return{p:[N(x),U('m'),O('='),SL,U('cm')],a:x*100};
+    case 1:x=rnd(1,9);y=rnd(1,99);return{p:[N(x),U('m'),N(y),U('cm'),O('='),SL,U('cm')],a:x*100+y};
+    case 2:x=rnd(2,9);return{p:[N(x*100),U('cm'),O('='),SL,U('m')],a:x};
+    case 3:x=rnd(1,9);y=rnd(1,99);return{p:[N(x),U('eur'),N(y),U('ct'),O('='),SL,U('ct')],a:x*100+y};
+    case 4:x=rnd(1,4);return{p:[N(x),U('h'),O('='),SL,U('min')],a:x*60};
+    case 5:x=rnd(1,3);y=pick([5,10,15,20,30,45]);return{p:[N(x),U('h'),N(y),U('min'),O('='),SL,U('min')],a:x*60+y};
+    case 6:x=rnd(1,9);y=pick([0,250,500,750]);
+      return y?{p:[N(x),U('kg'),N(y),U('g'),O('='),SL,U('g')],a:x*1000+y}:{p:[N(x),U('kg'),O('='),SL,U('g')],a:x*1000};
+    default:x=rnd(1,9);return{p:[N(x),U('km'),O('='),SL,U('m')],a:x*1000};
+   }},
+ place(){const v=rnd(0,2),u=pick([10,100,100,1000]),round=Math.random()<.2,mixed=(lo,hi)=>{let n;do n=rnd(lo,hi);while(n%u===0);return n};
+   if(v===0){const N=u===10?(round?rnd(2,99)*10:mixed(101,999)):u===100?(round?rnd(2,99)*100:mixed(101,9999)):(round?rnd(1,9)*1000:mixed(1001,9999));
+     return{w:{id:'pIn',n:0,o:0,a:u,b:N},p:[SL],a:Math.floor(N/u)}}
+   if(v===1){const K=u===10?rnd(2,150):u===100?rnd(2,99):rnd(2,9);return{w:{id:'pNum',n:0,o:0,a:u,b:K},p:[SL],a:K*u}}
+   const c=pick([[100,10],[100,1],[1000,100],[1000,10],[10,1]]),k=rnd(2,9);return{w:{id:'pConv',n:0,o:0,a:c,b:k},p:[SL],a:k*c[0]/c[1]}},
+ clock(){const v=rnd(0,2),t0=rnd(6,20)*60+rnd(0,11)*5,d=rnd(1,11)*5,f=x=>fmtT(hm(x));
+   if(v===0)return{w:{id:'cIn',n:0,o:0,a:f(t0),b:d},p:[SL],a:hm(t0+d),time:1};
+   if(v===1)return{w:{id:'cAgo',n:0,o:0,a:f(t0),b:d},p:[SL],a:hm(t0-d),time:1};
+   const e=rnd(1,18)*5;return{w:{id:'cDiff',n:0,o:0,a:f(t0),b:f(t0+e)},p:[SL,U('min')],a:e}},
+ word(){const id=pick(['add','sub','mul','div','money','ribbon']),n=rnd(0,3),o=rnd(0,5);let a,b,ans,u,f;
+   if(id==='add'){a=rnd(20,400);b=rnd(10,300);ans=a+b}
+   else if(id==='sub'){a=rnd(50,600);b=rnd(10,a-10);ans=a-b}
+   else if(id==='mul'){b=Math.max(row(),2);a=rnd(2,10);ans=a*b;f=[b,a]}
+   else if(id==='div'){const r=Math.max(row(),2),k=rnd(2,10);a=r*k;b=r;ans=k;f=[r,k]}
+   else if(id==='money'){a=rnd(5,40);b=rnd(5,60);ans=a+b;u='eur'}
+   else{a=rnd(40,300);b=rnd(10,a-10);ans=a-b;u='cm'}
+   return{w:{id,n,o,a,b},p:u?[SL,U(u)]:[SL],a:ans,f}}
+};
+function options(t){const a=t.a,c=new Set(),d=[1,-1,2,-2,10,-10];
+  if(t.time){const b=Math.floor(a/100)*60+a%100;return shuffle([a,...shuffle([5,-5,10,-10,15,-15,60,-60]).slice(0,3).map(x=>hm(b+x))])}
+  if(a>=100)d.push(100,-100);if(t.type==='place'){c.add(a*10);if(a%10===0)c.add(a/10)}if(t.f)d.push(t.f[0],-t.f[0],t.f[1],-t.f[1]);
+  shuffle(d).forEach(x=>{if(c.size<3&&x!==0&&a+x>=0)c.add(a+x)});let i=3;while(c.size<3)c.add(a+i++);return shuffle([a,...c])}
+function gen(type){const t=GEN[type]();t.type=type;if(Math.random()<.3)t.mc=options(t);return t}
+const keyOf=t=>JSON.stringify([t.p,t.w]);
+function makeTasks(n,types){const out=[];let guard=0;
+  while(out.length<n&&guard<600){guard++;const t=gen(pick(types));
+    if(guard<500&&out.some(o=>keyOf(o)===keyOf(t)))continue;out.push(t)}return out}
+
+/* Rendering helpers */
+function expr(p,slot){
+  return `<div class="expr">${p.map(k=>k.t==='n'?`<span class="num">${k.v}</span>`:k.t==='o'?`<span class="op">${opSym(k.v)}</span>`:
+    k.t==='u'?`<span class="unit">${UNITS[S.lang][k.v]}</span>`:slot).join('')}</div>`}
+function slotHTML(digits,state,mc){
+  const cells=String(digits).split('').filter(Boolean).map(d=>`<i>${d}</i>`).join('');
+  if(state==='active')return `<span class="slot">${mc?'<i>?</i>':cells+'<i class="caret"></i>'}</span>`;
+  return `<span class="slot ${state}">${cells}</span>`}
+const taskHTML=(t,slot)=>(t.w?`<p class="story">${story(t.w)}</p>`:'')+expr(t.p,slot);
+const seg=(act,vals,cur,label)=>`<div class="seg" role="group">${vals.map(v=>`<button data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${label(v)}</button>`).join('')}</div>`;
+const star=f=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="${f?'var(--star)':'none'}" stroke="var(--star)" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+
+/* Stickers: drawn in SVG with gradients, a die-cut white edge and a soft shadow */
+const INK='#2b2140';
+const shade=(hex,k)=>{const n=parseInt(hex.slice(1),16),f=c=>Math.round(k>0?c+(255-c)*k:c*(1+k));
+  return '#'+[n>>16,n>>8&255,n&255].map(c=>f(c).toString(16).padStart(2,'0')).join('')};
+const rg=(id,c)=>`<radialGradient id="${id}" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="${shade(c,.5)}"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${shade(c,-.28)}"/></radialGradient>`;
+const frame=(defs,sil,det)=>`<svg class="stk" viewBox="0 0 100 100" aria-hidden="true"><defs>${defs}</defs><g filter="url(#stSh)"><g stroke="#fff" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">${sil}</g>${sil}${det}</g></svg>`;
+const eyes=(cx,cy,dx,r)=>[-1,1].map(s=>`<circle cx="${cx+s*dx}" cy="${cy}" r="${r}" fill="${INK}"/><circle cx="${cx+s*dx+r*.3}" cy="${cy-r*.35}" r="${r*.4}" fill="#fff"/>`).join('');
+const cheeks=(cx,cy,dx,r)=>[-1,1].map(s=>`<ellipse cx="${cx+s*dx}" cy="${cy}" rx="${r}" ry="${r*.62}" fill="#ff6f9c" opacity=".5"/>`).join('');
+const smile=(cx,cy,w)=>`<path d="M${cx-w} ${cy} Q${cx} ${cy+w*1.1} ${cx+w} ${cy}" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/>`;
+const face=(cx,cy,s)=>eyes(cx,cy,9*s,3.2*s)+cheeks(cx,cy+6*s,15*s,4*s)+smile(cx,cy+5*s,4*s);
+const gloss=(cx,cy,rx,ry,rot)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" opacity=".35" transform="rotate(${rot} ${cx} ${cy})"/>`;
+const starPath=(cx,cy,R,r)=>'M'+[...Array(10).keys()].map(k=>{const a=(-90+k*36)*Math.PI/180,q=k%2?r:R;return (cx+q*Math.cos(a)).toFixed(1)+' '+(cy+q*Math.sin(a)).toFixed(1)}).join('L')+'Z';
+const pair=(f)=>f(-1)+f(1);
+function animal(i,o){const g='sg'+i,u=`url(#${g})`,ein=o.in||'#ffb0c8',ec=o.earC?`url(#${g}e)`:u;
+  const E={
+   cat:`<path d="M25 44 L21 15 L46 30Z" fill="${ec}"/><path d="M75 44 L79 15 L54 30Z" fill="${ec}"/><path d="M28 34 L26 23 L37 30Z" fill="${ein}"/><path d="M72 34 L74 23 L63 30Z" fill="${ein}"/>`,
+   bunny:pair(s=>`<ellipse cx="${50+s*13}" cy="26" rx="8.5" ry="19" fill="${ec}" transform="rotate(${s*10} ${50+s*13} 26)"/>`)+pair(s=>`<ellipse cx="${50+s*13}" cy="25" rx="4" ry="13" fill="${ein}" transform="rotate(${s*10} ${50+s*13} 26)"/>`),
+   round:pair(s=>`<circle cx="${50+s*24}" cy="32" r="12" fill="${ec}"/>`)+pair(s=>`<circle cx="${50+s*24}" cy="32" r="6" fill="${ein}"/>`),
+   big:pair(s=>`<circle cx="${50+s*26}" cy="36" r="15" fill="${ec}"/>`)+pair(s=>`<circle cx="${50+s*26}" cy="36" r="8.5" fill="${ein}"/>`),
+   floppy:pair(s=>`<ellipse cx="${50+s*30}" cy="55" rx="9" ry="18" fill="${ec}" transform="rotate(${-s*12} ${50+s*30} 55)"/>`),
+   side:pair(s=>`<circle cx="${50+s*30}" cy="56" r="11" fill="${ec}"/>`)+pair(s=>`<circle cx="${50+s*30}" cy="56" r="6" fill="${ein}"/>`)
+  }[o.ear]||'';
+  const sil=(o.x?o.x(u):'')+E+`<circle cx="50" cy="56" r="30" fill="${u}"/>`+(o.top||'');
+  const nose=o.nose===0?'':String(o.nose||'')[0]==='<'?o.nose:`<ellipse cx="50" cy="63" rx="3.2" ry="2.4" fill="${o.nose||'#e0567f'}"/>`;
+  const mouth=o.mouth===0?'':`<path d="M44.5 67 Q47.2 71 50 67 Q52.8 71 55.5 67" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/>`;
+  const det=(o.pre?`<g clip-path="url(#stHead)">${o.pre}</g>`:'')+(o.muz?`<ellipse cx="50" cy="67" rx="13" ry="9.5" fill="${o.muz}"/>`:'')
+    +gloss(38,37,11,5,-25)+(o.b||'')+eyes(50,o.ey||55,o.ex||12,4.5)+cheeks(50,64,21,5)+nose+mouth+(o.d||'');
+  return frame(rg(g,o.c)+(o.earC?rg(g+'e',o.earC):'')+(o.defs||''),sil,det)}
+const AN=[
+ {c:'#f6a04d',ear:'cat',muz:'#fff1dc',pre:`<path d="M50 26 L47 38 L53 38Z M40 28 L40 37 L45 36Z M60 28 L60 37 L55 36Z" fill="#d97b28"/>`,
+  d:`<path d="M30 66 L18 63 M30 69 L18 71 M70 66 L82 63 M70 69 L82 71" stroke="${INK}" stroke-width="1.2" stroke-linecap="round" opacity=".45"/>`},
+ {c:'#b3adc4',ear:'cat',muz:'#f3effa',top:`<path d="M70 30 L59 23 L59 37Z" fill="#ff5d8f"/><path d="M74 30 L85 23 L85 37Z" fill="#ff5d8f"/><circle cx="72" cy="30" r="4" fill="#ff8fb3"/>`},
+ {c:'#f6f0f7',ear:'bunny'},
+ {c:'#f9b3cd',ear:'bunny',in:'#fff0f5',nose:'#d6457f'},
+ {c:'#b9793f',ear:'round',in:'#e7b98a',muz:'#f3d7ad',nose:'#4a2c1a'},
+ {c:'#eaf1fb',ear:'round',in:'#c9d8ee',muz:'#ffffff',nose:INK},
+ {c:'#f8f8fa',ear:'round',earC:'#3a3348',in:'#3a3348',nose:INK,pre:pair(s=>`<ellipse cx="${50+s*12}" cy="55" rx="8" ry="9.5" fill="#3a3348" transform="rotate(${-s*20} ${50+s*12} 55)"/>`)},
+ {c:'#ef7a35',ear:'cat',in:'#4a2c2a',nose:INK,pre:`<path d="M18 58 Q36 60 50 72 Q64 60 82 58 L82 90 L18 90Z" fill="#fff8f0"/>`},
+ {c:'#a9b0bd',ear:'big',in:'#f6dbe4',nose:`<ellipse cx="50" cy="62" rx="6" ry="7.5" fill="#3c3c4a"/>`,mouth:0,d:smile(50,72,3)},
+ {c:'#cfc8d6',ear:'big',nose:'#ff7fa5'},
+ {c:'#e6b877',ear:'floppy',earC:'#8f5d34',muz:'#fff4e2',nose:'#3a2a22',pre:`<circle cx="62" cy="54" r="11" fill="#c98f4f"/>`,d:`<path d="M47 70 h6 v4 a3 3 0 0 1 -6 0Z" fill="#ff6f9c"/>`},
+ {c:'#fbf7ff',ear:'cat',in:'#ffc2dc',nose:'#ff8fb3',defs:`<linearGradient id="sg11h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2a8"/><stop offset="1" stop-color="#f2a93b"/></linearGradient>`,
+  x:()=>`<path d="M50 7 L43 32 L57 32Z" fill="url(#sg11h)"/><circle cx="22" cy="42" r="9" fill="#ff8fc0"/><circle cx="17" cy="56" r="8" fill="#b388ff"/><circle cx="21" cy="70" r="7" fill="#6ed3e0"/>`,
+  top:`<circle cx="44" cy="31" r="6" fill="#ff8fc0"/><circle cx="55" cy="29" r="5" fill="#b388ff"/>`,
+  d:`<path d="M46.8 19 L52 16.5 M45.4 24.5 L53.6 20.5" stroke="#e08e2b" stroke-width="1.4" stroke-linecap="round"/>`},
+ {c:'#f79a3a',ear:'round',in:'#fff1dc',muz:'#fff6e8',nose:'#3a2a22',pre:`<path d="M50 26 L46 40 L54 40Z M20 50 L34 54 L20 58Z M80 50 L66 54 L80 58Z M22 68 L34 68 L25 75Z M78 68 L66 68 L75 75Z" fill="#4a2c1a"/>`},
+ {c:'#f9adc4',ear:'cat',in:'#f47fa3',ey:52,mouth:0,nose:`<ellipse cx="50" cy="64" rx="10" ry="7" fill="#f47fa3"/><ellipse cx="46.5" cy="64" rx="1.6" ry="2.4" fill="#b84a70"/><ellipse cx="53.5" cy="64" rx="1.6" ry="2.4" fill="#b84a70"/>`},
+ {c:'#7fcc5b',ey:32,ex:16,nose:0,mouth:0,x:u=>pair(s=>`<circle cx="${50+s*16}" cy="32" r="12" fill="${u}"/>`),
+  b:pair(s=>`<circle cx="${50+s*16}" cy="32" r="7.5" fill="#fff"/>`),d:`<path d="M36 64 Q50 76 64 64" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/>`},
+ {c:'#ffd84d',mouth:0,x:u=>`<circle cx="44" cy="25" r="5" fill="${u}"/><circle cx="50" cy="21" r="6" fill="${u}"/><circle cx="56" cy="25" r="5" fill="${u}"/>`,nose:`<path d="M44 61 L56 61 L50 69Z" fill="#ff9838"/>`},
+ {c:'#46527a',mouth:0,nose:`<path d="M44 62 L56 62 L50 69Z" fill="#ffab2e"/>`,pre:`<circle cx="39" cy="56" r="14" fill="#fff"/><circle cx="61" cy="56" r="14" fill="#fff"/><ellipse cx="50" cy="72" rx="18" ry="14" fill="#fff"/>`},
+ {c:'#f7bd55',ear:'round',in:'#f3d7ad',muz:'#fff3d6',nose:'#4a2c1a',x:()=>[...Array(12).keys()].map(k=>`<circle cx="${(50+29*Math.cos(k*Math.PI/6)).toFixed(1)}" cy="${(56+29*Math.sin(k*Math.PI/6)).toFixed(1)}" r="8.5" fill="#c8702a"/>`).join('')},
+ {c:'#9a6238',ear:'side',in:'#f3cfa2',nose:'#6b3f22',pre:`<circle cx="40" cy="54" r="13" fill="#f3cfa2"/><circle cx="60" cy="54" r="13" fill="#f3cfa2"/><ellipse cx="50" cy="70" rx="19" ry="14" fill="#f3cfa2"/>`}
+];
+const ring=(R,r,c)=>`<path d="M${50-R} 70 A${R} ${R} 0 0 1 ${50+R} 70 L${50+r} 70 A${r} ${r} 0 0 0 ${50-r} 70Z" fill="${c}"/>`;
+const OBJ=[
+ g=>frame(rg(g,'#ffd23f'),`<path d="${starPath(50,52,40,19)}" fill="url(#${g})"/>`,gloss(41,36,8,3.5,-30)+face(50,54,1)),
+ g=>frame(rg(g,'#ff5d8f'),`<path d="M50 88 C8 60 12 20 34 20 C43 20 50 27 50 33 C50 27 57 20 66 20 C88 20 92 60 50 88Z" fill="url(#${g})"/>`,gloss(32,33,8,4.5,-35)+face(50,48,1)),
+ g=>frame(rg(g,'#f4f8ff'),ring(40,33,'#ff6b6b')+ring(33,26,'#ffb347')+ring(26,19,'#ffe066')+ring(19,12,'#7bd389')+ring(12,5,'#6ec6ff')
+   +[[17,72,9],[28,75,8],[83,72,9],[72,75,8]].map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="url(#${g})"/>`).join(''),
+   `<path d="M17 56 A36 36 0 0 1 46 34" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".4"/>`+face(22,72,.5)+face(78,72,.5)),
+ g=>frame(rg(g,'#ff8fc0')+rg(g+'b','#d9a066')+rg(g+'c','#ff4d6d'),
+   `<path d="M30 60 L70 60 L65 92 L35 92Z" fill="url(#${g}b)"/><ellipse cx="50" cy="56" rx="26" ry="11" fill="url(#${g})"/><ellipse cx="50" cy="44" rx="19" ry="10" fill="url(#${g})"/><ellipse cx="50" cy="33" rx="11" ry="8" fill="url(#${g})"/><circle cx="50" cy="21" r="7" fill="url(#${g}c)"/>`,
+   `<path d="M40 68 L42 90 M60 68 L58 90" stroke="#a8713d" stroke-width="2" opacity=".5"/><circle cx="48" cy="19" r="2" fill="#fff" opacity=".7"/>`
+   +[[34,55,4,2,'#7bd3ff'],[58,42,4,-1,'#fff27a'],[46,33,3,2,'#b388ff'],[63,56,4,-2,'#7be0a0'],[42,46,3,-2,'#fff']].map(p=>`<path d="M${p[0]} ${p[1]} l${p[2]} ${p[3]}" stroke="${p[4]}" stroke-width="2.4" stroke-linecap="round"/>`).join('')+face(50,74,.8)),
+ g=>frame(rg(g,'#ff4d6d')+rg(g+'b','#5fbf5a'),
+   `<path d="M50 92 C22 78 14 46 28 36 C40 28 60 28 72 36 C86 46 78 78 50 92Z" fill="url(#${g})"/>`+pair(s=>`<ellipse cx="${50+s*12}" cy="30" rx="11" ry="5.5" fill="url(#${g}b)" transform="rotate(${s*25} ${50+s*12} 30)"/>`)+`<ellipse cx="50" cy="25" rx="5.5" ry="10" fill="url(#${g}b)"/>`,
+   [[40,44],[60,44],[30,56],[70,56],[38,76],[62,76],[50,83]].map(p=>`<ellipse cx="${p[0]}" cy="${p[1]}" rx="1.6" ry="2.4" fill="#ffe58a"/>`).join('')+face(50,60,1)),
+ g=>frame(rg(g,'#ff8fc0')+rg(g+'b','#ffd23f'),[...Array(6).keys()].map(k=>`<circle cx="${(50+22*Math.cos(k*Math.PI/3)).toFixed(1)}" cy="${(50+22*Math.sin(k*Math.PI/3)).toFixed(1)}" r="14" fill="url(#${g})"/>`).join('')+`<circle cx="50" cy="50" r="16" fill="url(#${g}b)"/>`,face(50,49,.75)),
+ g=>frame(rg(g,'#dcebff'),`<circle cx="32" cy="58" r="15" fill="url(#${g})"/><circle cx="52" cy="46" r="20" fill="url(#${g})"/><circle cx="70" cy="58" r="15" fill="url(#${g})"/><ellipse cx="51" cy="66" rx="32" ry="13" fill="url(#${g})"/>`,gloss(44,36,9,4,-20)+face(51,60,1)),
+ g=>frame(rg(g,'#ffe27a'),`<path d="M62 12 A40 40 0 1 0 88 62 A30 30 0 0 1 62 12Z" fill="url(#${g})"/><path d="${starPath(74,36,9,4)}" fill="#fff2a8"/>`,
+   `<path d="M28 46 q4.5 4 9 0" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="27" cy="57" rx="4.5" ry="2.8" fill="#ff6f9c" opacity=".5"/>`+smile(38,60,3.5)),
+ g=>frame(rg(g,'#b388ff'),`<ellipse cx="50" cy="40" rx="27" ry="31" fill="url(#${g})"/><path d="M50 69 L44 78 L56 78Z" fill="url(#${g})"/>`,
+   `<path d="M50 78 Q44 86 52 96" fill="none" stroke="#8a7aa8" stroke-width="1.6" stroke-linecap="round"/>`+gloss(37,25,6,11,25)+face(50,42,1.1)),
+ g=>frame(rg(g,'#e9b77a')+rg(g+'b','#ff8fc0'),`<circle cx="50" cy="52" r="36" fill="url(#${g})"/>`,
+   `<circle cx="50" cy="52" r="29" fill="url(#${g}b)"/><circle cx="50" cy="52" r="11.5" fill="#c68f52"/><circle cx="50" cy="52" r="9" fill="#fff"/>`
+   +[[36,34,4,-2,'#7bd3ff'],[60,31,4,2,'#fff27a'],[72,48,2,4,'#b388ff'],[28,50,2,4,'#7be0a0'],[44,74,4,1,'#fff'],[62,70,3,-3,'#7bd3ff']].map(p=>`<path d="M${p[0]} ${p[1]} l${p[2]} ${p[3]}" stroke="${p[4]}" stroke-width="2.4" stroke-linecap="round"/>`).join('')
+   +eyes(50,52,18,3)+cheeks(50,59,21,3.5)+smile(50,67,3.5)),
+ g=>frame(rg(g,'#ffcc33'),`<path d="M18 78 L13 38 L33 54 L50 26 L67 54 L87 38 L82 78Z" fill="url(#${g})"/><circle cx="13" cy="37" r="5" fill="url(#${g})"/><circle cx="50" cy="25" r="5.5" fill="url(#${g})"/><circle cx="87" cy="37" r="5" fill="url(#${g})"/>`,
+   `<path d="M17.2 70 H82.8 L82 78 H18Z" fill="#e59a1c"/><circle cx="50" cy="58" r="5.5" fill="#ff5d8f"/><circle cx="48.5" cy="56.5" r="1.6" fill="#fff" opacity=".7"/><circle cx="33" cy="63" r="3.5" fill="#6ec6ff"/><circle cx="67" cy="63" r="3.5" fill="#7bd389"/>`+gloss(30,50,5,2.5,-50))
+];
+const stickerSVG=i=>i<AN.length?animal(i,AN[i]):OBJ[i-AN.length]('so'+i);
+const MED={g:'#f5c542',s:'#c3ccd8',b:'#d08a4e'};
+const medal=k=>`<svg class="medal" viewBox="0 0 40 48" aria-hidden="true"><defs>${rg('md'+k,MED[k])}</defs><path d="M10 2 L18 2 L22 20 L14 22Z" fill="#6b3fc4"/><path d="M30 2 L22 2 L18 20 L26 22Z" fill="#cf3f7c"/><circle cx="20" cy="31" r="15" fill="url(#md${k})" stroke="${shade(MED[k],-.35)}" stroke-width="1.5"/><circle cx="20" cy="31" r="10.5" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.2"/><path d="${starPath(20,31,7,3)}" fill="#fff" fill-opacity=".85"/></svg>`;
+
+let screen='home',Q=null,timer=null,resetArmed=false;
+const app=document.getElementById('app');
+const cur=()=>Q.tasks[Q.idx];
+
+function start(opts){opts=opts||{};
+  const tasks=opts.tasks||makeTasks(opts.sprint?1:S.count,S.types);
+  Q={cat:opts.sprint?'sprint':!opts.tasks&&S.types.length===1?S.types[0]:'mix',sprint:!!opts.sprint,practice:!!opts.practice,tasks,idx:0,input:'',tries:0,locked:null,msg:'',msgType:'',res:[],streak:0,
+     t0:Date.now(),taskT0:Date.now(),end:Date.now()+S.sprint*1000,last:null,wrong:null};
+  screen='quiz';render()}
+
+function render(){document.documentElement.lang=S.lang;
+  ({home,quiz,result,settings,stats,stickers})[screen]()}
+
+function home(){const l=L(),lv=levelOf(S.xp);
+  const typeSum=S.types.length===TYPES.length?l.allTypes:S.types.map(t=>l.types[t]).join(', ');
+  app.innerHTML=`
+  <header class="top"><div><h1>${l.title}</h1><p class="sub">${l.grade}</p></div>
+   <button class="iconbtn" data-act="go" data-v="settings">${l.settings}</button></header>
+  <section class="panel level"><div class="level-row"><span class="level-n">${l.level} ${lv.l}</span><span class="xp">${lv.cur} / ${lv.need} XP</span></div>
+   <div class="bar"><i style="width:${Math.round(lv.cur/lv.need*100)}%"></i></div></section>
+  <button class="big primary" data-act="start"><b>${l.start}</b><span>${S.count} ${l.tasks} · ${typeSum}</span></button>
+  <button class="big" data-act="sprint"><b>${l.sprint}</b><span>${S.sprint/60} ${l.min}${S.stats.bestSprint?` · ${l.best}: ${S.stats.bestSprint}`:''}</span></button>
+  <div class="two">
+   <button class="big" data-act="go" data-v="stickers"><b>${l.stickers}</b><span><span class="minis">${S.stickers.slice(-3).map(i=>stickerSVG(i)).join('')}</span> ${S.stickers.length}/${ST_N}</span></button>
+   <button class="big" data-act="go" data-v="stats"><b>${l.stats}</b><span>${l.weak}</span></button>
+  </div>`}
+
+function settings(){const l=L();
+  app.innerHTML=`
+  <header class="top"><h1>${l.settings}</h1><button class="iconbtn" data-act="go" data-v="home">${l.back}</button></header>
+  <section class="panel settings">
+   <div><h3>${l.sLang}</h3>${seg('lang',['en','de','ru'],S.lang,v=>({en:'English',de:'Deutsch',ru:'Русский'})[v])}</div>
+   <div><h3>${l.sCount}</h3>${seg('count',[5,10,15,20],S.count,v=>v)}</div>
+   <div><h3>${l.sTypes}</h3><div class="chips">${TYPES.map(t=>`<button class="chip" data-act="type" data-v="${t}" aria-pressed="${S.types.includes(t)}">${l.types[t]}</button>`).join('')}</div>
+    <p class="hint">${l.sTypesHint}</p>${S.types.length<TYPES.length?`<button class="btn small" data-act="alltypes" style="margin-top:8px">${l.sAll}</button>`:''}</div>
+   <div><h3>${l.sRows}</h3><div class="chips">${[1,2,3,4,5,6,7,8,9,10].map(r=>`<button class="chip num" data-act="row" data-v="${r}" aria-pressed="${S.rows.includes(r)}">${r}</button>`).join('')}</div>
+    <p class="hint">${l.sRowsHint}</p></div>
+   <div><h3>${l.sLimit}</h3>${seg('limit',[0,10,20,30,60,120],S.limit,v=>v?`${v} ${l.sec}`:l.off)}<p class="hint">${l.sLimitHint}</p></div>
+   <div><h3>${l.sSprint}</h3>${seg('sprintlen',[60,120,180,300],S.sprint,v=>`${v/60} ${l.min}`)}</div>
+   <div><h3>${l.sReset}</h3><div class="actions">
+    <button class="btn small ${resetArmed==='game'?'red':''}" data-act="reset" data-v="game">${resetArmed==='game'?l.resetSure:l.resetGame}</button>
+    <button class="btn small ${resetArmed==='stats'?'red':''}" data-act="reset" data-v="stats">${resetArmed==='stats'?l.resetSure:l.reset}</button></div></div>
+  </section>`}
+
+function quiz(){const l=L(),t=cur(),n=Q.tasks.length;
+  const state=Q.locked==='ok'?'ok':Q.locked==='reveal'?'fix':'active';
+  const digits=Q.locked?show(t,t.a):t.time?fmtIn(Q.input):Q.input;
+  const dots=Q.sprint?'':`<div class="dots" aria-hidden="true">${Q.tasks.map((_,i)=>{const r=Q.res[i];return `<span class="dot ${r?(r.first?'ok':r.ok?'half':'bad'):i===Q.idx?'cur':''}"></span>`}).join('')}</div>`;
+  const dis=Q.locked?'disabled':'';
+  const controls=t.mc?`<div class="opts">${t.mc.map(v=>{const cls=Q.locked&&v===t.a?' right':v===Q.wrong?' wrong':'';
+      return `<button class="key${cls}" data-act="opt" data-v="${v}" ${Q.locked||v===Q.wrong?'disabled':''}>${show(t,v)}</button>`}).join('')}
+     ${Q.locked==='reveal'?`<button class="key go" data-act="ok">${l.next}</button>`:''}</div>`
+   :`<div class="pad">${[1,2,3,4,5,6,7,8,9].map(d=>`<button class="key" data-act="d" data-v="${d}" ${dis}>${d}</button>`).join('')}
+     <button class="key del" data-act="del" aria-label="Delete" ${dis}>⌫</button>
+     <button class="key" data-act="d" data-v="0" ${dis}>0</button>
+     <button class="key go" data-act="ok" ${Q.locked==='ok'?'disabled':''}>${Q.locked==='reveal'?l.next:l.check}</button></div>`;
+  app.innerHTML=`
+  <header class="qtop"><button class="ghost" data-act="quit">${l.quit}</button>
+   <div class="clock" id="clock" role="timer" aria-label="${l.time}"></div>
+   <div class="streak">${Q.streak>1?`${l.streak}: ${Q.streak}`:''}</div></header>
+  ${S.limit?`<div class="tlimit"><div class="bar"><i id="tbar" style="width:100%"></i></div><span id="tsec"></span></div>`:''}
+  <div class="prog">${Q.practice?l.practiceTag+' · ':''}${Q.sprint?`${l.solved}: ${Q.res.filter(r=>r.first).length}`:`${l.task} ${Q.idx+1} ${l.of} ${n}`}</div>
+  ${dots}
+  <div class="card${Q.shake?' shake':''}">${taskHTML(t,slotHTML(digits,state,!!t.mc))}<p class="msg ${Q.msgType}" aria-live="polite">${Q.msg}</p></div>
+  ${controls}`;
+  Q.shake=false;tick()}
+
+function result(){const l=L(),n=Q.res.length,c=Q.res.filter(r=>r.first).length;
+  const secs=Math.round((Q.t1-Q.t0)/1000),mis=Q.res.filter(r=>!r.first);
+  const rewards=[];
+  if(Q.medal)rewards.push(`<div class="medalbig">${medal(Q.medal)}</div><b>${l.medalName[Q.medal]}</b>`);
+  if(Q.record)rewards.push(`<b>${l.record}</b>`);
+  if(Q.levelUp)rewards.push(`<b>${l.levelUp} ${Q.levelUp}</b>`);
+  Q.newStickers.forEach(s=>rewards.push(`<div class="newst">${stickerSVG(s)}</div><b>${l.newSticker}</b>`));
+  app.innerHTML=`
+  <section class="result"><h1>${Q.sprint?l.sprintDone:l.done}</h1><div class="stars">${[0,1,2].map(i=>star(i<Q.stars)).join('')}</div>
+   <p class="score">${l.score(c,n)}</p><p class="meta">${l.time}: ${fmtS(secs)} · +${Q.gain} XP</p></section>
+  ${rewards.length?`<section class="reward">${rewards.join('')}</section>`:''}
+  <section><h2>${mis.length?l.mistakes:n?l.noMistakes:''}</h2><div class="mistakes">${mis.map(r=>`<div class="mis">${taskHTML(r.t,slotHTML(show(r.t,r.t.a),'fix'))}
+    <small>${r.given!=null?`${l.yours}: <s>${show(r.t,r.given)}</s>`:r.timeout?l.noAnswer:''}</small></div>`).join('')}</div></section>
+  <div class="actions">${mis.length?`<button class="btn red" data-act="practice">${l.practice} (${mis.length})</button>`:''}
+   <button class="btn primary" data-act="replay">${Q.sprint?l.sprint:l.replay}</button><button class="btn" data-act="go" data-v="home">${l.menu}</button></div>`}
+
+function stickers(){const l=L();
+  app.innerHTML=`
+  <header class="top"><h1>${l.stickers}</h1><button class="iconbtn" data-act="go" data-v="home">${l.back}</button></header>
+  <p class="sub">${S.stickers.length} / ${ST_N} ${l.collected}. ${S.stickers.length===ST_N?l.albumFull:l.albumHint}</p>
+  <div class="album">${[...Array(ST_N).keys()].map(i=>S.stickers.includes(i)?`<div class="st">${stickerSVG(i)}</div>`:`<div class="st locked">?</div>`).join('')}</div>`}
+
+function weakInfo(){const st=S.stats;
+  const types=TYPES.filter(t=>st.types[t]&&st.types[t].n>=5&&st.types[t].c/st.types[t].n<.8).sort((a,b)=>st.types[a].c/st.types[a].n-st.types[b].c/st.types[b].n);
+  const facts=Object.keys(st.facts).filter(k=>st.facts[k].w/st.facts[k].n>=.3).sort((a,b)=>st.facts[b].w/st.facts[b].n-st.facts[a].w/st.facts[a].n||st.facts[b].w-st.facts[a].w).slice(0,8);
+  return{types,facts}}
+function stats(){const l=L(),st=S.stats,used=TYPES.filter(t=>st.types[t]);
+  const tot=used.reduce((a,t)=>({n:a.n+st.types[t].n,c:a.c+st.types[t].c}),{n:0,c:0}),w=weakInfo();
+  const head=`<header class="top"><h1>${l.stats}</h1><button class="iconbtn" data-act="go" data-v="home">${l.back}</button></header>`;
+  if(!tot.n){app.innerHTML=head+`<section class="panel"><p class="empty">${l.noData}</p></section>`;return}
+  const rowsUsed=[1,2,3,4,5,6,7,8,9,10].filter(r=>st.rows[r]);
+  const H=st.history,mx=Math.max(1,...H.map(h=>h.s)),cats=[...TYPES,'mix','sprint'].filter(k=>st.medals[k]),catName=k=>k==='mix'?l.mix:k==='sprint'?l.sprint:l.types[k];
+  app.innerHTML=head+`
+  <div class="tiles">
+   <div class="tile"><b>${Math.round(tot.c/tot.n*100)}%</b><span>${l.accuracy}</span></div>
+   <div class="tile"><b>${tot.n}</b><span>${l.solvedAll}</span></div>
+   <div class="tile"><b>${st.rounds}</b><span>${l.rounds}</span></div>
+   <div class="tile"><b>${st.bestSprint||'–'}</b><span>${l.bestSprint}</span></div></div>
+  ${H.length?`<section class="panel"><h2>${l.roundTime}</h2><div class="chart">${H.map(h=>`<div class="col"><span>${fmtS(h.s)}</span><i style="height:${Math.max(3,Math.round(h.s/mx*110))}px"></i><small>${h.c}/${h.n}</small></div>`).join('')}</div><p class="hint">${l.roundTimeHint}</p></section>`:''}
+  <section class="panel"><h2>${l.medals}</h2>${cats.length?`<div class="mrow mhead"><span></span>${['g','s','b'].map(k=>`<span>${medal(k)}<small>${l.medalShort[k]}</small></span>`).join('')}</div>`
+    +cats.map(k=>`<div class="mrow"><b>${catName(k)}</b>${['g','s','b'].map(m=>`<span>${st.medals[k][m]||'–'}</span>`).join('')}</div>`).join(''):`<p class="empty">${l.noMedals}</p>`}</section>
+  <section class="panel"><h2>${l.weak}</h2>
+   ${w.types.length||w.facts.length?`
+    ${w.types.length?`<div class="weak">${w.types.map(t=>`<span class="tag">${l.types[t]} · ${Math.round(st.types[t].c/st.types[t].n*100)}%</span>`).join('')}</div>`:''}
+    ${w.facts.length?`<h3>${l.hardFacts}</h3><div class="weak">${w.facts.map(k=>`<span class="tag">${k.replace('x',' '+opSym('*')+' ')}</span>`).join('')}</div>`:''}
+    <button class="btn primary small" data-act="weak">${l.trainWeak}</button>`:`<p class="empty">${l.weakNone}</p>`}
+  </section>
+  <section class="panel"><h2>${l.byType}</h2>${used.map(t=>{const y=st.types[t],p=Math.round(y.c/y.n*100);
+    return `<div class="trow"><b>${l.types[t]}</b><small>${y.c}/${y.n} · ${p}% · ${l.avg} ${Math.round(y.ms/y.n/1000)} ${l.sec}</small>
+     <div class="bar ${p>=80?'good':p<60?'bad':''}"><i style="width:${p}%"></i></div></div>`}).join('')}</section>
+  ${rowsUsed.length?`<section class="panel"><h2>${l.rowsAcc}</h2><div class="rowgrid">${[1,2,3,4,5,6,7,8,9,10].map(r=>{const R=st.rows[r];
+    if(!R)return `<div class="rc"><b>${r}</b><small>–</small></div>`;const p=Math.round(R.c/R.n*100);
+    return `<div class="rc ${p>=90?'good':p<70?'bad':''}"><b>${r}</b><small>${p}%</small></div>`}).join('')}</div></section>`:''}`}
+
+/* Game logic */
+function rec(t,first,ms){const st=S.stats,y=st.types[t.type]||(st.types[t.type]={n:0,c:0,ms:0});y.n++;y.c+=first?1:0;y.ms+=ms;
+  if(t.f){const r=t.f[0],k=t.f[1],R=st.rows[r]||(st.rows[r]={n:0,c:0});R.n++;R.c+=first?1:0;
+    const key=Math.min(r,k)+'x'+Math.max(r,k),F=st.facts[key]||(st.facts[key]={n:0,w:0});F.n++;if(!first)F.w++}}
+function press(d){if(Q.locked||cur().mc||Q.input.length>=4)return;Q.input+=d;if(Q.msgType==='warn'){Q.msg='';Q.msgType=''}render()}
+function del(){if(Q.locked||cur().mc)return;Q.input=Q.input.slice(0,-1);render()}
+function submit(){if(Q.locked==='reveal'){next();return}
+  if(Q.locked||cur().mc||!Q.input)return;answer(parseInt(Q.input,10))}
+function answer(v){const l=L(),t=cur(),ms=Date.now()-Q.taskT0;if(Q.locked)return;
+  if(v===t.a){const first=Q.tries===0;rec(t,first,ms);Q.res.push({t,ok:true,first,given:first?null:Q.last});Q.streak=first?Q.streak+1:0;
+    Q.locked='ok';Q.msg=pick(l.right);Q.msgType='ok';render();timer=setTimeout(next,800)}
+  else if(Q.tries===0){Q.tries=1;Q.last=v;Q.wrong=v;Q.input='';Q.msg=l.again;Q.msgType='warn';Q.shake=true;Q.streak=0;render()}
+  else{rec(t,false,ms);Q.res.push({t,ok:false,first:false,given:v});Q.locked='reveal';Q.msg=`${l.correctIs} ${show(t,t.a)}`;Q.msgType='bad';render()}}
+function timeout(){const l=L(),t=cur();rec(t,false,S.limit*1000);Q.res.push({t,ok:false,first:false,given:null,timeout:true});Q.streak=0;
+  Q.locked='reveal';Q.msg=`${l.timeUp} ${l.correctIs} ${show(t,t.a)}`;Q.msgType='bad';render()}
+function next(){clearTimeout(timer);Q.idx++;Q.input='';Q.tries=0;Q.locked=null;Q.msg='';Q.msgType='';Q.wrong=null;Q.last=null;Q.taskT0=Date.now();
+  if(Q.sprint&&Q.idx>=Q.tasks.length)Q.tasks.push(gen(pick(S.types)));
+  if(Q.idx>=Q.tasks.length){finish();return}
+  render()}
+function award(){const left=[...Array(ST_N).keys()].filter(s=>!S.stickers.includes(s));if(!left.length)return;const s=pick(left);S.stickers.push(s);Q.newStickers.push(s)}
+function finish(){clearTimeout(timer);Q.t1=Date.now();
+  const n=Q.res.length,c=Q.res.filter(r=>r.first).length,half=Q.res.filter(r=>r.ok&&!r.first).length,pct=n?c/n:0;
+  const before=levelOf(S.xp).l;Q.gain=c*10+half*5;S.xp+=Q.gain;const after=levelOf(S.xp).l;
+  Q.stars=n&&c===n?3:pct>=.7?2:pct>=.5?1:0;Q.levelUp=after>before?after:0;Q.newStickers=[];Q.record=false;
+  Q.medal=Q.practice?null:medalOf(c,n);
+  if(Q.medal){const m=S.stats.medals[Q.cat]||(S.stats.medals[Q.cat]={g:0,s:0,b:0});m[Q.medal]++}
+  if(n&&!Q.sprint&&!Q.practice){S.stats.history.push({s:Math.round((Q.t1-Q.t0)/1000),n,c});S.stats.history=S.stats.history.slice(-10)}
+  if(!Q.practice&&n>=5&&c===n)award();
+  if(Q.levelUp)award();
+  if(n)S.stats.rounds++;
+  if(Q.sprint&&c>S.stats.bestSprint){S.stats.bestSprint=c;Q.record=true}
+  save();screen='result';render()}
+function startWeak(){const w=weakInfo(),tasks=[];
+  shuffle(w.facts).slice(0,Math.ceil(S.count/2)).forEach(k=>{const[a,b]=k.split('x').map(Number);
+    tasks.push({p:[N(a),O('*'),N(b),O('='),SL],a:a*b,f:[S.rows.includes(a)?a:b,S.rows.includes(a)?b:a],type:'mul'})});
+  const types=w.types.length?w.types.slice(0,2):w.facts.length?['mul','div']:S.types;
+  start({tasks:shuffle(tasks.concat(makeTasks(S.count-tasks.length,types)))})}
+
+function tick(){if(screen!=='quiz'||!Q)return;const now=Date.now(),c=document.getElementById('clock');
+  if(Q.sprint){const left=Math.max(0,Q.end-now);if(c){c.textContent=fmtS(Math.ceil(left/1000));c.classList.toggle('low',left<=10000)}
+    if(left<=0){finish();return}}
+  else if(c)c.textContent=fmtS(Math.floor((now-Q.t0)/1000));
+  if(S.limit){const b=document.getElementById('tbar'),s=document.getElementById('tsec');
+    if(Q.locked){if(s&&!s.textContent)s.textContent='';return}
+    const left=S.limit*1000-(now-Q.taskT0);
+    if(b)b.style.width=Math.max(0,left/(S.limit*10))+'%';if(s)s.textContent=Math.ceil(Math.max(0,left)/1000);
+    if(left<=0)timeout()}}
+setInterval(tick,200);
+
+app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const a=b.dataset.act,v=b.dataset.v;
+  if(a!=='reset')resetArmed=false;
+  if(a==='go'){clearTimeout(timer);screen=v;render()}
+  else if(a==='lang'){S.lang=v;save();render()}
+  else if(a==='count'){S.count=+v;save();render()}
+  else if(a==='limit'){S.limit=+v;save();render()}
+  else if(a==='sprintlen'){S.sprint=+v;save();render()}
+  else if(a==='row'){const r=+v;S.rows=S.rows.includes(r)?(S.rows.length>1?S.rows.filter(x=>x!==r):S.rows):[...S.rows,r].sort((x,y)=>x-y);save();render()}
+  else if(a==='type'){S.types=S.types.includes(v)?(S.types.length>1?S.types.filter(x=>x!==v):S.types):TYPES.filter(x=>x===v||S.types.includes(x));save();render()}
+  else if(a==='alltypes'){S.types=TYPES.slice();save();render()}
+  else if(a==='start')start();
+  else if(a==='sprint')start({sprint:true});
+  else if(a==='weak')startWeak();
+  else if(a==='d')press(v);
+  else if(a==='del')del();
+  else if(a==='ok')submit();
+  else if(a==='opt')answer(+v);
+  else if(a==='quit'){clearTimeout(timer);save();screen='home';render()}
+  else if(a==='replay')start({sprint:Q.sprint});
+  else if(a==='practice')start({tasks:Q.res.filter(r=>!r.first).map(r=>r.t),practice:true});
+  else if(a==='reset'){if(resetArmed===v){if(v==='game'){S.xp=0;S.stickers=[]}else S.stats=newStats();resetArmed=false;save()}else resetArmed=v;render()}});
+document.addEventListener('keydown',e=>{if(screen!=='quiz')return;
+  if(/^[0-9]$/.test(e.key)){press(e.key);e.preventDefault()}
+  else if(e.key==='Backspace'){del();e.preventDefault()}
+  else if(e.key==='Enter'){submit();e.preventDefault()}});
+render();
+</script>
+
+</body>
+</html>
