@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&family=Fredoka:wght@500;600&display=swap">
 <style>
-/* Layout: one narrow column on squared notebook paper; the task sits on a card with a margin line, the clock is the biggest thing in the header, rewards live in a sticker album. */
+/* Layout: one narrow column on squared notebook paper; the task sits on a card, the clock is the biggest thing in the header, rewards live in a sticker album. */
 :root{
   --paper:#faf7fd; --grid:#e6dcf2; --ink:#2b2140; --muted:#6b6082;
   --accent:#6b3fc4; --accent-soft:#ece4fb; --on-accent:#ffffff; --pink:#cf3f7c; --pink-soft:#fbe2ee;
@@ -90,8 +90,7 @@ h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;c
 .dot.bad{background:var(--red);border-color:var(--red)}
 .dot.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 
-.card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:26px 16px 16px 40px;min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:14px}
-.card::before{content:"";position:absolute;left:24px;top:0;bottom:0;width:2px;background:var(--pink);opacity:.55}
+.card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:24px 16px 16px;min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:14px}
 .card.shake{animation:shake .38s}
 @keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 .story{margin:0;font-size:19px;line-height:1.5}
