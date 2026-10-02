@@ -29,7 +29,7 @@
   --red:#ff9478; --red-soft:#4a2a22; --green:#72d897; --green-soft:#1e3d2b; --star:#f2c14e;
   --surface:#272036; --line:#3f3454; color-scheme:dark}
 
-html,body{min-height:100%}
+html,body{min-height:100%;overscroll-behavior-y:none}
 body{background-color:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:17px;line-height:1.45;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:22px 22px}
@@ -93,7 +93,7 @@ h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;c
 .card{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:24px 16px 16px;min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:14px}
 .card.shake{animation:shake .38s}
 @keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
-.story{margin:0;font-size:19px;line-height:1.5}
+.story{margin:0;font-size:19px;line-height:1.5;text-align:center;text-wrap:balance}
 .expr{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.25em .32em;font-family:var(--f-num);font-weight:500;font-size:clamp(34px,10vw,52px);line-height:1.15}
 .num{font-variant-numeric:tabular-nums}
 .op{color:var(--muted)}
@@ -133,7 +133,7 @@ h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;c
 @keyframes pop{0%{transform:scale(.2) rotate(-20deg)}100%{transform:none}}
 .mistakes{display:grid;gap:8px}
 .mis{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;gap:6px}
-.mis .story{font-size:15px;color:var(--muted)}
+.mis .story{font-size:15px;color:var(--muted);text-align:left}
 .mis .expr{font-size:26px;justify-content:flex-start}
 .mis small{color:var(--muted);font-size:14px}
 .mis small s{color:var(--red)}
@@ -294,6 +294,12 @@ if(!S.v3){S.v3=1;S.stickers=[];if(S.types.length>=7)S.types=TYPES.slice()}
 if(!S.v4){S.v4=1;if(S.types.length>=8)S.types=TYPES.slice()}
 S.stickers=S.stickers.filter(x=>typeof x==='number'&&x<ST_N);
 const save=()=>store.set('mathe3v2',S);
+/* The running round is stored too, so reloading the page continues it instead of restarting */
+const RK='mathe3round';
+function saveRound(){if(screen==='quiz'&&Q){Q.savedAt=Date.now();store.set(RK,Q)}}
+function clearRound(){try{localStorage.removeItem(RK)}catch(e){}}
+function restoreRound(){const r=store.get(RK,null);if(!r||!r.tasks||!r.tasks[r.idx])return false;
+  const sh=Date.now()-(r.savedAt||Date.now());r.t0+=sh;r.taskT0+=sh;r.end+=sh;r.shake=false;Q=r;screen='quiz';return true}
 const L=()=>T[S.lang];
 
 const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -534,7 +540,8 @@ function start(opts){opts=opts||{};
   screen='quiz';render()}
 
 function render(){document.documentElement.lang=S.lang;
-  ({home,quiz,result,settings,stats,stickers})[screen]()}
+  ({home,quiz,result,settings,stats,stickers})[screen]();
+  if(screen==='quiz')saveRound();else clearRound()}
 
 function home(){const l=L(),lv=levelOf(S.xp);
   const typeSum=S.types.length===TYPES.length?l.allTypes:S.types.map(t=>l.types[t]).join(', ');
@@ -649,7 +656,8 @@ function stats(){const l=L(),st=S.stats,used=TYPES.filter(t=>st.types[t]);
 /* Game logic */
 function rec(t,first,ms){const st=S.stats,y=st.types[t.type]||(st.types[t.type]={n:0,c:0,ms:0});y.n++;y.c+=first?1:0;y.ms+=ms;
   if(t.f){const r=t.f[0],k=t.f[1],R=st.rows[r]||(st.rows[r]={n:0,c:0});R.n++;R.c+=first?1:0;
-    const key=Math.min(r,k)+'x'+Math.max(r,k),F=st.facts[key]||(st.facts[key]={n:0,w:0});F.n++;if(!first)F.w++}}
+    const key=Math.min(r,k)+'x'+Math.max(r,k),F=st.facts[key]||(st.facts[key]={n:0,w:0});F.n++;if(!first)F.w++}
+  save()}
 function press(d){if(Q.locked||cur().mc||Q.input.length>=4)return;Q.input+=d;if(Q.msgType==='warn'){Q.msg='';Q.msgType=''}render()}
 function del(){if(Q.locked||cur().mc)return;Q.input=Q.input.slice(0,-1);render()}
 function submit(){if(Q.locked==='reveal'){next();return}
@@ -685,6 +693,7 @@ function startWeak(){const w=weakInfo(),tasks=[];
   start({tasks:shuffle(tasks.concat(makeTasks(S.count-tasks.length,types)))})}
 
 function tick(){if(screen!=='quiz'||!Q)return;const now=Date.now(),c=document.getElementById('clock');
+  if(now-(Q.savedAt||0)>1000)saveRound();
   if(Q.sprint){const left=Math.max(0,Q.end-now);if(c){c.textContent=fmtS(Math.ceil(left/1000));c.classList.toggle('low',left<=10000)}
     if(left<=0){finish();return}}
   else if(c)c.textContent=fmtS(Math.floor((now-Q.t0)/1000));
@@ -720,7 +729,7 @@ document.addEventListener('keydown',e=>{if(screen!=='quiz')return;
   if(/^[0-9]$/.test(e.key)){press(e.key);e.preventDefault()}
   else if(e.key==='Backspace'){del();e.preventDefault()}
   else if(e.key==='Enter'){submit();e.preventDefault()}});
-render();
+if(restoreRound()&&Q.locked==='ok')next();else render();
 </script>
 
 </body>
