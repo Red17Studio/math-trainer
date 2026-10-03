@@ -133,6 +133,9 @@ h3{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;c
 @keyframes pop{0%{transform:scale(.2) rotate(-20deg)}100%{transform:none}}
 .mistakes{display:grid;gap:8px}
 .mis{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;gap:6px}
+.clues{display:block;text-align:left;margin-top:8px;font-size:17px}
+.clues span{display:block;padding-left:1.1em;text-indent:-1.1em}
+.clues span::before{content:"• ";color:var(--accent)}
 .mis .story{font-size:15px;color:var(--muted);text-align:left}
 .mis .expr{font-size:26px;justify-content:flex-start}
 .mis small{color:var(--muted);font-size:14px}
@@ -328,7 +331,12 @@ const NOUNS=[
 function pl(l,n,f){if(l==='ru'){const a=n%10,b=n%100;return a===1&&b!==11?f[0]:a>=2&&a<=4&&(b<12||b>14)?f[1]:f[2]}return n===1?f[0]:f[1]}
 const PV={en:{1:'ones',10:'tens',100:'hundreds',1000:'thousands'},de:{1:'Einer',10:'Zehner',100:'Hunderter',1000:'Tausender'},
  ru:{1:['единица','единицы','единиц','единицах'],10:['десяток','десятка','десятков','десятках'],100:['сотня','сотни','сотен','сотнях'],1000:['тысяча','тысячи','тысяч','тысячах']}};
+const RD={1:['единице','единицам'],10:['десятку','десяткам'],100:['сотне','сотням'],1000:['тысяче','тысячам']};
+const clues=(title,list,sum)=>`<b>${title}</b><span class="clues">${[...list,sum].map(x=>`<span>${x}</span>`).join('')}</span>`;
 const WORD={
+ pFind:{en:(n,o,a,b)=>clues('Find the four-digit number.',a.map(([f,u,d])=>f===0?`One digit has the value ${d*u}.`:f===1?`One digit has the value of ${d} ${d===1?PV.en[u].slice(0,-1):PV.en[u]}.`:`The digit ${d} is in the ${PV.en[u]} place.`),`All digits add up to ${b}.`),
+      de:(n,o,a,b)=>clues('Finde die vierstellige Zahl.',a.map(([f,u,d])=>f===0?`Eine Ziffer hat den Wert ${d*u}.`:f===1?`Ein Wert ist ${d} ${PV.de[u]}.`:`Die Ziffer ${d} steht an der ${PV.de[u]}stelle.`),`Alle Ziffern zusammen ergeben ${b}.`),
+      ru:(n,o,a,b)=>clues('Найди четырёхзначное число.',a.map(([f,u,d])=>f===0?`Одно из значений равно ${d*u}.`:f===1?`Одно из значений равно ${d} ${RD[u][d===1?0:1]}.`:`Цифра ${d} стоит в разряде ${PV.ru[u][2]}.`),`Сумма всех цифр равна ${b}.`)},
  pIn:{en:(n,o,a,b)=>`How many ${PV.en[a]} are there in ${b} altogether?`,
       de:(n,o,a,b)=>`Wie viele ${PV.de[a]} hat die Zahl ${b} insgesamt?`,
       ru:(n,o,a,b)=>`Сколько всего ${PV.ru[a][2]} в числе ${b}?`},
@@ -394,7 +402,10 @@ const GEN={
       return y?{p:[N(x),U('kg'),N(y),U('g'),O('='),SL,U('g')],a:x*1000+y}:{p:[N(x),U('kg'),O('='),SL,U('g')],a:x*1000};
     default:x=rnd(1,9);return{p:[N(x),U('km'),O('='),SL,U('m')],a:x*1000};
    }},
- place(){const v=rnd(0,2),u=pick([10,100,100,1000]),round=Math.random()<.2,mixed=(lo,hi)=>{let n;do n=rnd(lo,hi);while(n%u===0);return n};
+ place(){const v=rnd(0,3),u=pick([10,100,100,1000]),round=Math.random()<.2,mixed=(lo,hi)=>{let n;do n=rnd(lo,hi);while(n%u===0);return n};
+   if(v===3){const dg=[rnd(1,9),rnd(0,9),rnd(0,9),rnd(0,9)],us=[1000,100,10,1],hid=rnd(0,3),
+       cl=shuffle([0,1,2,3].filter(i=>i!==hid).map(i=>[dg[i]===0?2:us[i]===1?pick([1,2]):pick([0,1,2]),us[i],dg[i]]));
+     return{w:{id:'pFind',n:0,o:0,a:cl,b:dg[0]+dg[1]+dg[2]+dg[3]},p:[SL],a:dg[0]*1000+dg[1]*100+dg[2]*10+dg[3],noMc:1}}
    if(v===0){const N=u===10?(round?rnd(2,99)*10:mixed(101,999)):u===100?(round?rnd(2,99)*100:mixed(101,9999)):(round?rnd(1,9)*1000:mixed(1001,9999));
      return{w:{id:'pIn',n:0,o:0,a:u,b:N},p:[SL],a:Math.floor(N/u)}}
    if(v===1){const K=u===10?rnd(2,150):u===100?rnd(2,99):rnd(2,9);return{w:{id:'pNum',n:0,o:0,a:u,b:K},p:[SL],a:K*u}}
@@ -421,7 +432,7 @@ function options(t){const a=t.a,c=new Set(),d=[1,-1,2,-2,10,-10];
   if(t.time){const b=Math.floor(a/100)*60+a%100,n12=x=>{x=(x%720+720)%720;return hm(x<60?x+720:x)};return shuffle([a,...shuffle([5,-5,10,-10,15,-15,60,-60]).slice(0,3).map(x=>n12(b+x))])}
   if(a>=100)d.push(100,-100);if(t.type==='place'){c.add(a*10);if(a%10===0)c.add(a/10)}if(t.f)d.push(t.f[0],-t.f[0],t.f[1],-t.f[1]);
   shuffle(d).forEach(x=>{if(c.size<3&&x!==0&&a+x>=0)c.add(a+x)});let i=3;while(c.size<3)c.add(a+i++);return shuffle([a,...c])}
-function gen(type){const t=GEN[type]();t.type=type;if(!t.faces&&Math.random()<.3)t.mc=options(t);return t}
+function gen(type){const t=GEN[type]();t.type=type;if(!t.faces&&!t.noMc&&Math.random()<.3)t.mc=options(t);return t}
 const keyOf=t=>JSON.stringify([t.p,t.w]);
 function makeTasks(n,types){const out=[];let guard=0;
   while(out.length<n&&guard<600){guard++;const t=gen(pick(types));
